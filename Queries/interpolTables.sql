@@ -41,7 +41,7 @@ create table interpol.post (
     date_created DATETIME NOT NULL,
     user_id NVARCHAR(50) NOT NULL,
     photo_id NVARCHAR(50) NULL,
-    FOREIGN KEY (user_id) REFERENCES interpol.interpol_user (user_id)
+    FOREIGN KEY (user_id) REFERENCES interpol.interpol_user (user_id),
     FOREIGN KEY (photo_id) REFERENCES interpol.photo (photo_id)
 );
 
@@ -70,7 +70,7 @@ create table interpol.community_post (
     date_created DATETIME NOT NULL,
     community_id NVARCHAR(50) NOT NULL,
     photo_id NVARCHAR(50) NULL,
-    FOREIGN KEY (community_id) REFERENCES interpol.community (community_id)
+    FOREIGN KEY (community_id) REFERENCES interpol.community (community_id),
     FOREIGN KEY (photo_id) REFERENCES interpol.photo (photo_id)
 );
 
