@@ -51,7 +51,9 @@ create table interpol.community (
     community_description NVARCHAR(MAX) NOT NULL,
     date_created DATETIME NOT NULL,
     user_id NVARCHAR(50) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES interpol.interpol_user (user_id)
+    photo_id NVARCHAR(50),
+    FOREIGN KEY (user_id) REFERENCES interpol.interpol_user (user_id),
+    FOREIGN KEY (photo_id) REFERENCES interpol.photo (photo_id)
 );
 
 create table interpol.member (
