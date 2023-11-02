@@ -864,3 +864,1542 @@ BEGIN
     SET NOCOUNT OFF
 END
 GO
+
+-- Chat Procedures
+
+CREATE PROCEDURE interpol.getChats
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+    SELECT chat_id, chat_title, date_created, ai_id
+    FROM interpol.chat
+    END
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getUserChats
+    @pUserId NVARCHAR(50) NOT NULL
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+    SELECT chat_id, chat_title, date_created, ai_id
+    FROM interpol.chat
+    WHERE user_id = @pUserId
+    END
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addChat
+    @pChatTitle NVARCHAR(100),
+    @pAiId NVARCHAR(50) NOT NULL,
+    @pUserId NVARCHAR(50) NOT NULL,
+    @responseMessage NVARCHAR(250) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+    DECLARE @DateCreated DATETIME = GETDATE()
+    BEGIN TRY
+        INSERT INTO interpol.chat (chat_title, date_created, ai_id, user_id)
+        VALUES (@pChatTitle, @DateCreated, @pAiId, @pUserId)
+        SET @responseMessage = 'Success'
+    END TRY
+    BEGIN CATCH
+        SET @responseMessage=ERROR_MESSAGE() 
+    END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateChat
+    @pChatId NVARCHAR(50) NOT NULL,
+    @pChatTitle NVARCHAR(100),
+    @pAiId NVARCHAR(50) NOT NULL,
+    @pUserId NVARCHAR(50) NOT NULL,
+    @responseMessage NVARCHAR(250) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+    DECLARE @DateCreated DATETIME = GETDATE()
+    BEGIN TRY
+        UPDATE interpol.chat (chat_title, date_created, ai_id, user_id)
+        SET chat_title = @pChatTitle, date_created = @DateCreated, ai_id = @pAiId, user_id = @pUserId
+        WHERE chat_id = @pChatId
+        SET @responseMessage = 'Success'
+    END TRY
+    BEGIN CATCH
+        SET @responseMessage=ERROR_MESSAGE() 
+    END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteChat
+    @pChatId NVARCHAR(50) NOT NULL,
+    @pUserId NVARCHAR(50) NOT NULL,
+    @responseMessage NVARCHAR(250) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN TRY
+        DELETE FROM interpol.chat
+        WHERE chat_id = @pChatId AND user_id = @pUserId
+    END TRY
+    BEGIN CATCH
+        SET @responseMessage = ERROR_MESSAGE()
+    END CATCH
+    SET NOTCOUNT OFF
+END
+GO
+
+-- Community Procedures
+
+CREATE PROCEDURE interpol.getCommunities
+    @pResponseMessage NVARCHAR(250) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN TRY
+        SELECT community_id, community_name, community_description, date_created, user_id
+        FROM interpol.community
+        SET @pResponseMessage = 'Success'
+    END TRY
+    BEGIN CATCH
+        SET @pResponseMessage = ERROR_MESSAGE()
+    END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleCommunity
+    @pCommunityId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(250) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN TRY
+        SELECT community_id, community_name, community_description, date_created, user_id
+        FROM interpol.community
+        WHERE community_id = @pCommunityId
+        SET @pResponseMessage = 'Success'
+    END TRY
+    BEGIN CATCH
+        SET @pResponseMessage = ERROR_MESSAGE()
+    END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addCommunity
+    @pCommunityName NVARCHAR(100),
+    @pCommunityDescription NVARCHAR(MAX) = NULL,
+    @pUserId NVARCHAR(50),
+    @ImageLink NVARCHAR (100), 
+    @ImageSource NVARCHAR (1000),
+    @ImageData NVARCHAR (1000),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @DateCreated DATETIME = GETDATE()
+        DECLARE @pPhotoId NVARCHAR(50) 
+        BEGIN TRY
+            EXEC @pPhotoId = interpol.usp_ImportImage @ImageLink, @ImageSource, @ImageData
+            INSERT INTO interpol.community (community_name, community_description, date_created, user_id, photo_id)
+            VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId, @pPhotoId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateCommunity
+    @pCommunityId NVARCHAR(50),
+    @pCommunityName NVARCHAR(100),
+    @pCommunityDescription NVARCHAR(MAX) = NULL,
+    @pUserId NVARCHAR(50),
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageSource NVARCHAR (1000) = NULL,
+    @ImageData NVARCHAR (1000) = NULL,
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @DateCreated DATETIME = GETDATE()
+        DECLARE @pPhotoId NVARCHAR(50) 
+        BEGIN TRY
+            IF @ImageLink IS NULL OR @ImageLink = ''
+                BEGIN
+                    UPDATE interpol.community (community_name, community_description, date_created, user_id)
+                    SET community_name = @pCommunityName, community_description = @pCommunityDescription, date_created = @DateCreated, user_id = @pUserId
+                    WHERE community_id = @pCommunityId
+                    SET @pResponseMessage = 'Success'
+                END
+            ELSE
+                BEGIN
+                    EXEC @pPhotoId = interpol.usp_ImportImage @ImageLink, @ImageSource, @ImageData
+                    UPDATE interpol.community (community_name, community_description, date_created, user_id)
+                    SET community_name = @pCommunityName, community_description = @pCommunityDescription, date_created = @DateCreated, user_id = @pUserId, photo_id = @pPhotoId
+                    WHERE community_id = @pCommunityId
+                    SET @pResponseMessage = 'Success'
+                END
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteCommunity
+    @pCommunityId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.community 
+            WHERE community_id = @pCommunityId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Device Procedure
+
+CREATE PROCEDURE interpol.getDevices
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT device_id, device_name, device_description, date_created
+            FROM interpol.device
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleDevice
+    @pUserId NVARCHAR(50),
+    @pDeviceId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT device_id, device_name, device_description, date_created
+            FROM interpol.device
+            WHERE user_id = @pUserId AND device_id = @pDeviceId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addDevice
+    @pDeviceName NVARCHAR(100),
+    @pDeviceDescription NVARCHAR(MAX),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            INSERT INTO interpol.device (device_name, device_description, date_created, user_id)
+            VALUES (@pDeviceName, @pDeviceDescription, @pDateCreated, @pUserId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateDevice
+    @pDeviceId NVARCHAR(50),
+    @pDeviceName NVARCHAR(100),
+    @pDeviceDescription NVARCHAR(MAX),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            UPDATE interpol.device (device_name, device_description, date_created, user_id)
+            SET device_name = @pDeviceName, device_description = @pDeviceDescription, date_created = @pDateCreated, user_id = @pUserId
+            WHERE device_id = @pDeviceId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteDevice
+    @pDeviceId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.device
+            WHERE device_id = @pDeviceId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- DocFile Procedure
+
+CREATE PROCEDURE interpol.getDocfiles
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT doc_file_id, title, date_created, user_id
+            FROM interpol.doc_file
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getUserDocfiles
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT doc_file_id, title, date_created, user_id
+            FROM interpol.doc_file
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleDocfile
+    @pDocFileId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT doc_file_id, title, date_created, user_id
+            FROM interpol.doc_file
+            WHERE doc_file_id = @pDocFileId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addDocfile
+    @pTitle NVARCHAR(100),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            INSERT INTO interpol.doc_file (title, date_created, user_id)
+            VALUES (@pTitle, @pDateCreated, @pUserId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateDocfile
+    @pDocFileId NVARCHAR(50),
+    @pTitle NVARCHAR(100),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            UPDATE interpol.doc_file (title, date_created, user_id)
+            SET title = @pTitle, date_created = @pDateCreated, user_id = @pUserId
+            WHERE doc_file_id = @pDocFileId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteDocfile
+    @pDocFileId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.doc_file
+            WHERE doc_file_id = @pDocFileId AND user_id = @pUserId 
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Favorite Procedure
+
+CREATE PROCEDURE interpol.getFavorites
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT favorite_id, content_type, content_id, date_created, user_id
+            FROM interpol.favorite
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getUserFavorites
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT favorite_id, content_type, content_id, date_created, user_id
+            FROM interpol.favorite
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleFavorite
+    @pFavoriteId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT favorite_id, content_type, content_id, date_created, user_id
+            FROM interpol.favorite
+            WHERE favorite_id = @pFavoriteId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addFavorite
+    @pContentType NCHAR(10),
+    @pContentId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            INSERT INTO interpol.favorite (content_type, content_id, date_created, user_id)
+            VALUES (@pContentType, @pContentId, @pDateCreated, @pUserId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteFavorite
+    @pFavoriteId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.favorite
+            WHERE favorite_id = @pFavoriteId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Follower Procedure
+
+CREATE PROCEDURE interpol.getFollowers
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY   
+            SELECT follower_id
+            FROM interpol.follower
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleFollower
+    @pFollowerId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT follower_id
+            FROM interpol.follower
+            WHERE follower_id = @pFollowerId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addFollower
+    @pUserId NVARCHAR(50),
+    @pFollowerId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.follower (user_id, follower_id)
+            VALUES (@pUserId, @pFollowerId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteFollower
+    @pUserId NVARCHAR(50),
+    @pFollowerId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.follower
+            WHERE user_id = @pUserId AND follower_id = @pFollowerId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Gltf Procedure
+
+CREATE PROCEDURE interpol.getGltfs
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        SELECT gltf_id, file_name, file_type, user_id, date_created
+        FROM interpol.gltf
+        BEGIN TRY
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getUserGltfs
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT gltf_id, file_name, file_type, user_id, date_created
+            FROM interpol.gltf
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleGltf
+    @pGltfId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT gltf_id, file_name, file_type, user_id, date_created
+            FROM interpol.gltf
+            WHERE gltf_id = @pGltfId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addGltf
+    @pFileName NVARCHAR(50),
+    @pFileType CHAR(10),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            INSERT INTO interpol.gltf (file_name, file_type, user_id, date_created)
+            VALUES (@pFileName, @pFileType, @pUserId, @pDateCreated)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateGltf
+    @pGltfId NVARCHAR(50),
+    @pFileName NVARCHAR(50),
+    @pFileType CHAR(10),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        BEGIN TRY
+            UPDATE interpol.gltf (file_name, file_type, user_id, date_created)
+            SET file_name = @pFileName, file_type = @pFileType, user_id = @pUserId, date_created = @pDateCreated
+            WHERE gltf_id = @pGltfId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteGltf
+    @pGltfId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.gltf
+            WHERE gltf_id = @pGltfId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Member Procedure
+
+CREATE PROCEDURE interpol.getMembers
+    @pCommunityId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT member_id, user_id, community_id
+            FROM interpol.member
+            WHERE community_id = @pCommunityId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleMember
+    @pMemberId NVARCHAR(50),
+    @pCommunityId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT member_id, user_id, community_id
+            FROM interpol.member
+            WHERE member_id = @pMemberId AND community_id = @pCommunityId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addMember
+    @pUserId NVARCHAR(50),
+    @pCommunityId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.member (user_id, community_id)
+            VALUES (@pUserId, @pCommunityId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteMember
+    @pMemberId NVARCHAR(50),
+    @pCommunityId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.member
+            WHERE member_id = @pMemberId AND community_id = @pCommunityId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Message Procedure
+
+CREATE PROCEDURE interpol.getMessages
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT message_id, message_title, user_id, follower_id
+            FROM interpol.message_table
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleMessage
+    @pUserId NVARCHAR(50),
+    @pMessageId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT message_id, message_title, user_id, follower_id
+            FROM interpol.message_table
+            WHERE user_id = @pUserId AND message_id = @pMessageId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addMessage
+    @pMessageTitle NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pFollowerId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.message_table (message_title, user_id, follower_id)
+            VALUES (@pMessageTitle, @pUserId, @pFollowerId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteMessage
+    @pMessageId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pFollowerId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.message_table
+            WHERE message_id = @pMessageId AND user_id = @pUserId AND follower_id = @pFollowerId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Moveable Procedure
+
+CREATE PROCEDURE interpol.getMoveables
+    @pDocFileId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT moveable_id, position_x, position_y, position_z, doc_file_id
+            FROM interpol.moveable
+            WHERE doc_file_id = @pDocFileId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleMoveable
+    @pMoveableId NVARCHAR(50),
+    @pDocFileId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT moveable_id, position_x, position_y, position_z, doc_file_id
+            FROM interpol.moveable
+            WHERE moveable_id = @pMoveableId AND doc_file_id = @pDocFileId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addMoveable
+    @pPositionX TINYINT,
+    @pPositionY TINYINT,
+    @pPositionZ TINYINT,
+    @pDocFileId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.moveable (position_x, position_y, position_z, doc_file_id)
+            VALUES (@pPositionX, @pPositionY, @pPositionZ, @pDocFileId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateMoveable
+    @pMoveableId NVARCHAR(50),
+    @pPositionX TINYINT,
+    @pPositionY TINYINT,
+    @pPositionZ TINYINT,
+    @pDocFileId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            UPDATE interpol.moveable (moveable_id, position_x, position_y, position_z, doc_file_id)
+            SET moveable_id = @pMoveableId, position_x = @pPositionX, position_y = @pPositionY, position_z = @pPositionZ, doc_file_id = @pDocFileId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteMoveable
+    @pMoveableId NVARCHAR(50),
+    @pDocFileId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.moveable
+            WHERE moveable_id = @pMoveableId AND doc_file_id = @pDocFileId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Panel Procedure
+
+CREATE PROCEDURE interpol.getUserPanels
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT panel_id, panel_title, date_created, user_id, photo_id
+            FROM interpol.panel
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSinglePanel
+    @pPanelId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT panel_id, panel_title, date_created, user_id, photo_id
+            FROM interpol.panel
+            WHERE panel_id = @pPanelId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addPanel
+    @pPanelTitle NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @ImageLink NVARCHAR (100), 
+    @ImageSource NVARCHAR (1000),
+    @ImageData NVARCHAR (1000),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        DECLARE @pPhotoId NVARCHAR(50)
+        BEGIN TRY
+            EXEC @pPhotoId = interpol.usp_ImportImage @ImageLink, @ImageSource, @ImageData
+            INSERT INTO interpol.panel (panel_title, date_created, user_id, photo_id)
+            VALUES (@pPanelTitle, @pDateCreated, @pUserId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updatePanel
+    @pPanelId NVARCHAR(50),
+    @pPanelTitle NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @ImageLink NVARCHAR (100), 
+    @ImageSource NVARCHAR (1000),
+    @ImageData NVARCHAR (1000),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pDateCreated DATETIME = GETDATE()
+        DECLARE @pPhotoId NVARCHAR(50) 
+        BEGIN TRY
+            EXEC @pPhotoId = interpol.usp_ImportImage @ImageLink, @ImageSource, @ImageData
+            UPDATE interpol.panel (panel_title, date_created, user_id, photo_id)
+            SET panel_title = @pPanelTitle, date_created = @pDateCreated, user_id = @pUserId, photo_id = @pPhotoId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deletePanel
+    @pPanelId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.panel
+            WHERE panel_id = @pPanelId AND user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Note Procedure
+
+CREATE PROCEDURE interpol.getNotes
+    @pPanelId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT note_id, note_title, panel_id, photo_id
+            FROM interpol.note
+            WHERE panel_id = @pPanelId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleNote
+    @pPanelId NVARCHAR(50),
+    @pNoteId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT note_id, note_title, panel_id, photo_id
+            FROM interpol.note
+            WHERE panel_id = @pPanelId AND note_id = @pNoteId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addNote
+    @pNoteTitle NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @ImageLink NVARCHAR (100), 
+    @ImageSource NVARCHAR (1000),
+    @ImageData NVARCHAR (1000),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pPhotoId NVARCHAR(50)
+        BEGIN TRY
+            EXEC @pPhotoId = interpol.usp_ImportImage @ImageLink, @ImageSource, @ImageData
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateNote
+    @pNoteId NVARCHAR(50),
+    @pNoteTitle NVARCHAR(50),   
+    @pPanelId NVARCHAR(50),
+    @ImageLink NVARCHAR (100), 
+    @ImageSource NVARCHAR (1000),
+    @ImageData NVARCHAR (1000),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        DECLARE @pPhotoId NVARCHAR(50)
+        BEGIN TRY
+            IF @ImageLink IS NULL OR @ImageLink = ''
+                BEGIN
+                    UPDATE interpol.note (note_title, panel_id)
+                    SET note_title = @pNoteTitle, panel_id = @pPanelId
+                    WHERE note_id = @pNoteId
+                    SET @pResponseMessage = 'Success'
+                END
+            ELSE
+                BEGIN
+                    EXEC @pPhotoId = interpol.usp_ImportImage @ImageLink, @ImageSource, @ImageData
+                    UPDATE interpol.note (note_title, panel_id)
+                    SET note_title = @pNoteTitle, panel_id = @pPanelId
+                    WHERE note_id = @pNoteId
+                    SET @pResponseMessage = 'Success'
+                END
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteNote
+    @pNoteId NVARCHAR(50),
+    @pPanelId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.note
+            WHERE note_id = @pNoteId AND panel_id = @pPanelId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Pin Procedure
+
+CREATE PROCEDURE interpol.getPins
+    @pDeviceId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT pin_id, pin_location, is_analog, device_id
+            FROM interpol.pin
+            WHERE device_id = @pDeviceId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSinglePin
+    @pPinId NVARCHAR(50),
+    @pDeviceId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT pin_id, pin_location, is_analog, device_id
+            FROM interpol.pin
+            WHERE device_id = @pDeviceId AND pin_id = @pPinId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addPin
+    @pPinLocation NVARCHAR(50),
+    @pIsAnalog BIT,
+    @pDeviceId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.pin (pin_location, is_analog, device_id)
+            VALUES (@pPinLocation, @pIsAnalog, @pDeviceId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updatePin
+    @pPinId NVARCHAR(50),
+    @pPinLocation NVARCHAR(50),
+    @pIsAnalog BIT,
+    @pDeviceId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            UPDATE interpol.pin (pin_location, is_analog, device_id)
+            SET pin_location = @pPinLocation, is_analog = @pIsAnalog, device_id = @pDeviceId
+            WHERE pin_id = @pPinId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deletePin
+    @pPinId NVARCHAR(50),
+    @pDeviceId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.pin
+            WHERE pin_id = @pPinId AND device_id = @pDeviceId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Prompt Procedure 
+
+CREATE PROCEDURE interpol.getPrompts
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        SELECT prompt_id, request, user_id, chat_id
+        FROM interpol.prompt
+        BEGIN TRY
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getUserPrompts
+    @pUserId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT prompt_id, request, user_id, chat_id
+            FROM interpol.prompt
+            WHERE user_id = @pUserId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getChatPrompts
+    @pChatId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT prompt_id, request, user_id, chat_id
+            FROM interpol.prompt
+            WHERE chat_id = @pChatId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addPrompt
+    @pRequest NVARCHAR(MAX),
+    @pUserId NVARCHAR(50),
+    @pChatId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.prompt (request, user_id, chat_id)
+            VALUES (@pRequest, @pUserId, @pChatId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deletePrompt
+    @pPromptId NVARCHAR(50),
+    @pUserId NVARCHAR(50),
+    @pChatId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.prompt
+            WHERE prompt_id = @pPromptId AND user_id = @pUserId AND chat_id = @pChatId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+-- Shape Procedure
+
+CREATE PROCEDURE interpol.getShapes
+    @pGltfId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT shape_id, shape_name, position_x, position_y, position_z, height, width, depth, radius, shape_length, color, color_value, gltf_id
+            FROM interpol.shape
+            WHERE gltf_id = @pGltfId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleShape
+    @pShapeId NVARCHAR(50),
+    @pGltfId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            SELECT shape_id, shape_name, position_x, position_y, position_z, height, width, depth, radius, shape_length, color, color_value, gltf_id
+            FROM interpol.shape
+            WHERE gltf_id = @pGltfId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.addShape
+    @pShapeName NVARCHAR(50),
+    @pPositionX TINYINT,
+    @pPositionY TINYINT,
+    @pPositionZ TINYINT,
+    @pHeight TINYINT,
+    @pWidth TINYINT,
+    @pDepth TINYINT,
+    @pRadius TINYINT,
+    @pShapeLength TINYINT,
+    @pColor NVARCHAR(50),
+    @pColorValue TINYINT,
+    @pGltfId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            INSERT INTO interpol.shape (shape_name, position_x, position_y, position_z, height, width, depth, radius, shape_length, color, color_value, gltf_id)
+            VALUES (@pShapeName, @pPositionX, @pPositionY, @pPositionZ, @pHeight, @pWidth, @pDepth, @pRadius, @pShapeLength, @pColor, @pColorValue, @pGltfId)
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.updateShape
+    @pShapeId NVARCHAR(50),
+    @pShapeName NVARCHAR(50),
+    @pPositionX TINYINT,
+    @pPositionY TINYINT,
+    @pPositionZ TINYINT,
+    @pHeight TINYINT,
+    @pWidth TINYINT,
+    @pDepth TINYINT,
+    @pRadius TINYINT,
+    @pShapeLength TINYINT,
+    @pColor NVARCHAR(50),
+    @pColorValue TINYINT,
+    @pGltfId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            UPDATE interpol.shape (shape_name, position_x, position_y, position_z, height, width, depth, radius, shape_length, color, color_value, gltf_id)
+            SET shape_name = @pShapeName, position_x = @pPositionX, position_y = @pPositionY, position_z = @pPositionZ, height = @pHeight, width = @pWidth, depth = @pDepth, radius = @pRadius, shape_length = @pShapeLength, color = @pColor, color_value = @pColorValue, gltf_id = @pGltfId
+            WHERE shape_id = @pShapeId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.deleteShape
+    @pShapeId NVARCHAR(50),
+    @pGltfId NVARCHAR(50),
+    @pResponseMessage NVARCHAR(100) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON
+        BEGIN TRY
+            DELETE FROM interpol.shape
+            WHERE shape_id = @pShapeId AND gltf_id = @pGltfId
+            SET @pResponseMessage = 'Success'
+        END TRY
+        BEGIN CATCH
+            SET @pResponseMessage = ERROR_MESSAGE()
+        END CATCH
+    SET NOCOUNT OFF
+END
+GO

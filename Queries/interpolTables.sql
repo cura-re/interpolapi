@@ -269,6 +269,7 @@ create table interpol.gltf (
     gltf_id NVARCHAR(50) PRIMARY KEY NOT NULL,
     file_name NVARCHAR(50) NOT NULL,
     file_type CHAR(10) NOT NULL,
+    date_created DATETIME,
     user_id NVARCHAR(50) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES interpol.interpol_user (user_id)
 );
