@@ -35,3 +35,123 @@ build_metadata.AdditionalFiles.CssScope =
 [/Users/blehjo/projects/interpol/interpolapi/Views/ArtificialIntelligences/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXJ0aWZpY2lhbEludGVsbGlnZW5jZXMvSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Audios/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaW9zL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Audios/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaW9zL0RlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Audios/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaW9zL0RldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Audios/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaW9zL0VkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Audios/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXVkaW9zL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChannelComments/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbENvbW1lbnRzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChannelComments/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbENvbW1lbnRzL0RlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChannelComments/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbENvbW1lbnRzL0RldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChannelComments/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbENvbW1lbnRzL0VkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChannelComments/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbENvbW1lbnRzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Channels/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbHMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Channels/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbHMvRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Channels/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbHMvRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Channels/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbHMvRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Channels/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhbm5lbHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChatComments/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdENvbW1lbnRzL0NyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChatComments/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdENvbW1lbnRzL0RlbGV0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChatComments/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdENvbW1lbnRzL0RldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChatComments/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdENvbW1lbnRzL0VkaXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ChatComments/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdENvbW1lbnRzL0luZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Chats/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdHMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Chats/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdHMvRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Chats/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdHMvRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Chats/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdHMvRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Chats/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2hhdHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Comments/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbWVudHMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Comments/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbWVudHMvRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Comments/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbWVudHMvRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Comments/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbWVudHMvRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/Comments/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbWVudHMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 

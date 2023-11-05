@@ -1,0 +1,61 @@
+@model IEnumerable<interpolapi.Models.Channel>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ChannelName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DateCreated)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ChannelDescription)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Community)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.ChannelName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateCreated)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ChannelDescription)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Community.CommunityId)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ChannelId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ChannelId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ChannelId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+</body>
+</html>
