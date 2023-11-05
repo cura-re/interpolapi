@@ -1,0 +1,5 @@
+Context and Models: dotnet ef dbcontext scaffold "server=localhost;Database=interpol;User Id=sa;Password=D&senrascanco0608;MultipleActiveResultSets=true;TrustServerCertificate=True;Encrypt=False;" Microsoft.EntityFrameworkCore.SqlServer -o Models -c "InterpolContext"
+
+Models: dotnet ef dbcontext scaffold "server=localhost;Database=interpol;User Id=sa;Password=D&senrascanco0608;MultipleActiveResultSets=true;TrustServerCertificate=True;Encrypt=False;" Microsoft.EntityFrameworkCore.SqlServer -o Models    
+
+Controllers: dotnet aspnet-codegenerator --project . controller -name ActionsController -m ActionTable -dc InterpolContext -outDir Controllers/
