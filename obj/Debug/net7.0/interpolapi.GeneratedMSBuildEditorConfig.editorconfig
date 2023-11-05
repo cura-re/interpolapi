@@ -15,3 +15,23 @@ build_property.SupportLocalizedComponentNames =
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
 build_property.MSBuildProjectDirectory = /Users/blehjo/projects/interpol/interpolapi
 build_property._RazorSourceGeneratorDebug = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ArtificialIntelligences/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXJ0aWZpY2lhbEludGVsbGlnZW5jZXMvQ3JlYXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ArtificialIntelligences/Delete.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXJ0aWZpY2lhbEludGVsbGlnZW5jZXMvRGVsZXRlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ArtificialIntelligences/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXJ0aWZpY2lhbEludGVsbGlnZW5jZXMvRGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ArtificialIntelligences/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXJ0aWZpY2lhbEludGVsbGlnZW5jZXMvRWRpdC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/blehjo/projects/interpol/interpolapi/Views/ArtificialIntelligences/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQXJ0aWZpY2lhbEludGVsbGlnZW5jZXMvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
