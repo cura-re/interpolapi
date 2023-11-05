@@ -1,34 +1,35 @@
-﻿namespace interpolapi.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace interpolapi.Models;
+
+public partial class Shape
 {
-	public class Shape
-	{
-		public int ShapeId { get; set; }
+    public string ShapeId { get; set; } = null!;
 
-		public string ShapeName { get; set; }
+    public string ShapeName { get; set; } = null!;
 
-		public int PositionX { get; set; } = new Random().Next(5);
+    public byte PositionX { get; set; }
 
-        public int PositionY { get; set; } = new Random().Next(5);
+    public byte PositionY { get; set; }
 
-        public int PositionZ { get; set; } = new Random().Next(5);
+    public byte PositionZ { get; set; }
 
-        public int? Height { get; set; }
+    public byte Height { get; set; }
 
-		public int? Width { get; set; }
+    public byte Width { get; set; }
 
-		public int? Depth { get; set; }
+    public byte Depth { get; set; }
 
-		public int? Radius { get; set; }
+    public byte Radius { get; set; }
 
-		public int? Length { get; set; }
+    public byte ShapeLength { get; set; }
 
-		public string? Color { get; set; }
+    public string Color { get; set; } = null!;
 
-		public int? ColorValue { get; set; }
+    public byte ColorValue { get; set; }
 
-		public int? GltfId { get; set; }
+    public string GltfId { get; set; } = null!;
 
-		public Gltf? Gltf { get; set; }
-	}
+    public virtual Gltf Gltf { get; set; } = null!;
 }
-

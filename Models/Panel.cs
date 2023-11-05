@@ -1,30 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using interpolapi.Models;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Panel
 {
-	public class Panel
-	{
-        public int PanelId { get; set; }
+    public string PanelId { get; set; } = null!;
 
-        public string? Title { get; set; }
+    public string PanelTitle { get; set; } = null!;
 
-        public int? XCoord { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        public int? YCoord { get; set; }
+    public string UserId { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public string? PhotoId { get; set; }
 
-        public string? UserId { get; set; }
-        public User? User { get; set; }
+    public virtual ICollection<Note> Notes { get; set; } = new List<Note>();
 
-        public int? DocFileId { get; set; }
-        public DocFile? DocFile { get; set; }
+    public virtual Photo? Photo { get; set; }
 
-        public ICollection<Note>? Notes { get; set; }
-    }
+    public virtual InterpolUser User { get; set; } = null!;
 }

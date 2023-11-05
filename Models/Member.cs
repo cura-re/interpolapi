@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Member
 {
-	public class Member
-	{
-        public int MemberId { get; set; }
+    public string MemberId { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public string UserId { get; set; } = null!;
 
-        public int CommunityId { get; set; }
-        public Community? Community { get; set; }
+    public string CommunityId { get; set; } = null!;
 
-        public string? UserId { get; set; }
-        public User? User { get; set; }
-	}
+    public virtual Community Community { get; set; } = null!;
+
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

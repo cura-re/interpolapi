@@ -1,35 +1,25 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class GltfComment
 {
-	public class GltfComment
-	{
-        public int GltfCommentId { get; set; }
+    public string CommentId { get; set; } = null!;
 
-        public string CommentValue { get; set; }
+    public string Content { get; set; } = null!;
 
-        public string? MediaLink { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        public string Type { get; set; } = "gltfcomment";
+    public string UserId { get; set; } = null!;
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+    public string GltfId { get; set; } = null!;
 
-        [NotMapped]
-        public string? ImageSource { get; set; }
+    public string? PhotoId { get; set; }
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public virtual Gltf Gltf { get; set; } = null!;
 
-        public string? UserId { get; set; }
-        public User? User { get; set; }
+    public virtual Photo? Photo { get; set; }
 
-        public int GltfId { get; set; }
-        public Gltf? Gltf { get; set; }
-
-        public ICollection<Favorite>? Favorites { get; set; }
-    }
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

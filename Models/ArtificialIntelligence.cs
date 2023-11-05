@@ -1,35 +1,27 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class ArtificialIntelligence
 {
-	public class ArtificialIntelligence
-	{
-        public int ArtificialIntelligenceId { get; set; }
+    public string AiId { get; set; } = null!;
 
-        public string? Name { get; set; }
+    public string AiName { get; set; } = null!;
 
-        public string? Role { get; set; }
+    public string? AiRole { get; set; }
 
-        public string? ImageLink { get; set; }
+    public string? AiDescription { get; set; }
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        [NotMapped]
-        public string? ImageSource { get; set; }
+    public string UserId { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public string? PhotoId { get; set; }
 
-        public string? UserId { get; set; }
+    public virtual ICollection<Chat> Chats { get; set; } = new List<Chat>();
 
-        public User? User { get; set; }
+    public virtual Photo? Photo { get; set; }
 
-        public ICollection<Chat>? Chats { get; set; }
-
-        public ICollection<ChatComment>? ChatComments { get; set; }
-    }
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

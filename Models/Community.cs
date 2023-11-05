@@ -1,38 +1,29 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Community
 {
-    public class Community
-	{
-        public int CommunityId { get; set; }
+    public string CommunityId { get; set; } = null!;
 
-        public string? CommunityName { get; set; }
+    public string CommunityName { get; set; } = null!;
 
-        public string? Description { get; set; }
+    public string CommunityDescription { get; set; } = null!;
 
-        public string? MediaLink { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+    public string UserId { get; set; } = null!;
 
-        [NotMapped]
-        public string? ImageSource { get; set; }
+    public string? PhotoId { get; set; }
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public virtual ICollection<Channel> Channels { get; set; } = new List<Channel>();
 
-        public string? UserId { get; set; }
-        public User? User { get; set; }
+    public virtual ICollection<CommunityPost> CommunityPosts { get; set; } = new List<CommunityPost>();
 
-		public ICollection<Member>? Members { get; set; }
+    public virtual ICollection<Member> Members { get; set; } = new List<Member>();
 
-		public ICollection<Channel>? Channels { get; set; }
-	}
+    public virtual Photo? Photo { get; set; }
+
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

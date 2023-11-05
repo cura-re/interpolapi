@@ -1,33 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Note
 {
-	public class Note
-	{
-        public int NoteId { get; set; }
+    public string NoteId { get; set; } = null!;
 
-        public string? NoteValue { get; set; }
+    public string NoteTitle { get; set; } = null!;
 
-        public string? MediaLink { get; set; }
+    public string PanelId { get; set; } = null!;
 
-        public int? XCoord { get; set; }
+    public string? PhotoId { get; set; }
 
-        public int? YCoord { get; set; }
+    public virtual Panel Panel { get; set; } = null!;
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
-
-        [NotMapped]
-        public string? ImageSource { get; set; }
-
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-
-        public int PanelId { get; set; }
-        public Panel? Panel { get; set; }
-	}
+    public virtual Photo? Photo { get; set; }
 }
-

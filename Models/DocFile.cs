@@ -1,19 +1,19 @@
 ﻿using System;
-namespace interpolapi.Models
+using System.Collections.Generic;
+
+namespace interpolapi.Models;
+
+public partial class DocFile
 {
-	public class DocFile
-	{
-		public int DocFileId { get; set; }
+    public string DocFileId { get; set; } = null!;
 
-		public string Title { get; set; }
+    public string Title { get; set; } = null!;
 
-		public string? UserId { get; set; }
+    public DateTime DateCreated { get; set; }
 
-		public User? User { get; set; }
+    public string UserId { get; set; } = null!;
 
-		public ICollection<Moveable>? Moveables { get; set; }
+    public virtual ICollection<Moveable> Moveables { get; set; } = new List<Moveable>();
 
-		public ICollection<Panel>? Panels { get; set; }
-	}
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

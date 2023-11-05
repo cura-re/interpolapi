@@ -1,17 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Follower
 {
-    public class Follower
-    {
-        public int FollowerId { get; set; }
+    public string UserId { get; set; } = null!;
 
-        public int FollowerUser { get; set; }
+    public string FollowerId { get; set; } = null!;
 
-        public string? UserId { get; set; }
-        public User? User { get; set; }
+    public virtual InterpolUser FollowerNavigation { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-    }
+    public virtual InterpolUser User { get; set; } = null!;
 }

@@ -1,18 +1,19 @@
-﻿namespace interpolapi.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace interpolapi.Models;
+
+public partial class Moveable
 {
-	public class Moveable
-	{
-		public int MoveableId { get; set; }
+    public string MoveableId { get; set; } = null!;
 
-		public int XCoord { get; set; }
+    public byte PositionX { get; set; }
 
-		public int YCoord { get; set; }
+    public byte PositionY { get; set; }
 
-		public int ZCoord { get; set; }
+    public byte PositionZ { get; set; }
 
-		public int FileId { get; set; }
+    public string DocFileId { get; set; } = null!;
 
-		public DocFile DocFile { get; set; }
-	}
+    public virtual DocFile DocFile { get; set; } = null!;
 }
-

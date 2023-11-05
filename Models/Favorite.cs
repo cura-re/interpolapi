@@ -1,20 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Favorite
 {
-    public class Favorite
-    {
-        public int FavoriteId { get; set; }
+    public string FavoriteId { get; set; } = null!;
 
-        public int ContentId { get; set; }
+    public string ContentType { get; set; } = null!;
 
-        public string? UserId { get; set; }
+    public string ContentId { get; set; } = null!;
 
-        public User? User { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        public string ContentType { get; set; }
+    public string UserId { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-    }
+    public virtual InterpolUser User { get; set; } = null!;
 }

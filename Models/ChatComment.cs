@@ -1,30 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class ChatComment
 {
-	public class ChatComment
-	{
-        public int ChatCommentId { get; set; }
+    public string CommentId { get; set; } = null!;
 
-        public string? ChatValue { get; set; }
+    public string Content { get; set; } = null!;
 
-        public string? MediaLink { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        public string? Type { get; set; } = "ChatComment";
+    public string ChatId { get; set; } = null!;
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+    public string? PhotoId { get; set; }
 
-        [NotMapped]
-        public string? ImageSource { get; set; }
+    public virtual Chat Chat { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-
-        public int? ChatId { get; set; }
-        public Chat? Chat { get; set; }
-
-        public ICollection<Favorite>? Favorites { get; set; }
-    }
+    public virtual Photo? Photo { get; set; }
 }

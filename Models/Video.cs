@@ -1,8 +1,13 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace interpolapi.Models;
 
-public class Video 
+public partial class Video
 {
-    public string VideoId { get; set; }
-    public string FileName { get; set; }
-    public byte[] VideoData { get; set; }
+    public string VideoId { get; set; } = null!;
+
+    public string? FileName { get; set; }
+
+    public byte[]? VideoData { get; set; }
 }

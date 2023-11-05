@@ -1,16 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace interpolapi.Models;
 
-public class Device {
+public partial class Device
+{
+    public string DeviceId { get; set; } = null!;
 
-    public string DeviceId { get; set; } = Guid.NewGuid().ToString();
+    public string DeviceName { get; set; } = null!;
 
-    public string DeviceName { get; set; }
+    public string? DeviceDescription { get; set; }
 
-    public int DeviceType { get; set; }
+    public DateTime DateCreated { get; set; }
 
-    public string? UserId { get; set;}
-    public User? User { get; set; }
+    public string UserId { get; set; } = null!;
 
-    public ICollection<Pin>? Pins { get; set; }
+    public virtual ICollection<Pin> Pins { get; set; } = new List<Pin>();
+
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

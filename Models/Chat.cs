@@ -1,35 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Chat
 {
-    public class Chat
-    {
-        public int ChatId { get; set; }
+    public string ChatId { get; set; } = null!;
 
-        public string Title { get; set; }
+    public string ChatTitle { get; set; } = null!;
 
-        public string Type { get; set; } = "chat";
+    public DateTime DateCreated { get; set; }
 
-        public bool? IsPrivate { get; set; }
+    public string AiId { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+    public string UserId { get; set; } = null!;
 
-        public string? UserId { get; set; }
-        public User? User { get; set; }
+    public virtual ArtificialIntelligence Ai { get; set; } = null!;
 
-        public int? ArtificialIntelligenceId { get; set; }
-        public ArtificialIntelligence? ArtificialIntelligences { get; set; }
+    public virtual ICollection<ChatComment> ChatComments { get; set; } = new List<ChatComment>();
 
-		public ICollection<ChatComment>? ChatComments { get; set; }
+    public virtual ICollection<Prompt> Prompts { get; set; } = new List<Prompt>();
 
-        public ICollection<Comment>? Comments { get; set; }
+    public virtual InterpolUser User { get; set; } = null!;
 
-        public ICollection<UserChatComment>? UserChatComments { get; set; }
-
-        public ICollection<Favorite>? Favorites { get; set; }
-    }
+    public virtual ICollection<UserChatComment> UserChatComments { get; set; } = new List<UserChatComment>();
 }

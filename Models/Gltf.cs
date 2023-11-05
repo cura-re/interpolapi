@@ -1,22 +1,21 @@
-﻿namespace interpolapi.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace interpolapi.Models;
+
+public partial class Gltf
 {
-	public class Gltf
-	{
-		public int GltfId { get; set; }
+    public string GltfId { get; set; } = null!;
 
-		public string FileInformation { get; set; }
+    public string FileName { get; set; } = null!;
 
-		public string? UserId { get; set; }
+    public string FileType { get; set; } = null!;
 
-		public User? User { get; set; }
+    public string UserId { get; set; } = null!;
 
-        public string Type { get; set; } = "gltf";
+    public virtual ICollection<GltfComment> GltfComments { get; set; } = new List<GltfComment>();
 
-        public ICollection<Shape>? Shapes { get; set; }
+    public virtual ICollection<Shape> Shapes { get; set; } = new List<Shape>();
 
-		public ICollection<GltfComment>? GltfComments { get; set; }
-
-		public ICollection<Favorite>? Favorites { get; set; }
-	}
+    public virtual InterpolUser User { get; set; } = null!;
 }
-

@@ -1,18 +1,19 @@
-﻿namespace interpolapi.Models
+﻿using System;
+using System.Collections.Generic;
+
+namespace interpolapi.Models;
+
+public partial class Pin
 {
-	public class Pin
-	{
-		public int PinId { get; set; }
+    public string PinId { get; set; } = null!;
 
-		public string PinLocation { get; set; }
+    public string PinLocation { get; set; } = null!;
 
-        public bool IsAnalog { get; set; } = false;
+    public bool? IsAnalog { get; set; }
 
-		public string DeviceId { get; set; }
+    public string DeviceId { get; set; } = null!;
 
-		public Device Device { get; set; }
+    public virtual ICollection<ActionTable> ActionTables { get; set; } = new List<ActionTable>();
 
-        public ICollection<Action>? Actions { get; set; }
-	}
+    public virtual Device Device { get; set; } = null!;
 }
-

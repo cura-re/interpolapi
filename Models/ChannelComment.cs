@@ -1,34 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class ChannelComment
 {
-	public class ChannelComment
-	{
-        public int ChannelCommentId { get; set; }
+    public string CommentId { get; set; } = null!;
 
-        public string CommentValue { get; set; }
+    public string Content { get; set; } = null!;
 
-        public string? MediaLink { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        public string Type { get; set; } = "channelcomment";
+    public string ChannelId { get; set; } = null!;
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+    public string? PhotoId { get; set; }
 
-        [NotMapped]
-        public string? ImageSource { get; set; }
+    public virtual Channel Channel { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-
-        public int? ChannelId { get; set; }
-        public Channel? Channels { get; set; }
-
-        public string? UserId { get; set; }
-        public User? User { get; set; }
-    }
+    public virtual Photo? Photo { get; set; }
 }
-

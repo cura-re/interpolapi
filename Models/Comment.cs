@@ -1,34 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace interpolapi.Models
+namespace interpolapi.Models;
+
+public partial class Comment
 {
-	public class Comment
-	{
-        public int CommentId { get; set; }
+    public string CommentId { get; set; } = null!;
 
-        public string CommentValue { get; set; }
+    public string Content { get; set; } = null!;
 
-        public string? MediaLink { get; set; }
+    public DateTime DateCreated { get; set; }
 
-        public string Type { get; set; } = "comment";
+    public string PostId { get; set; } = null!;
 
-        [NotMapped]
-        public IFormFile? ImageFile { get; set; }
+    public string? PhotoId { get; set; }
 
-        [NotMapped]
-        public string? ImageSource { get; set; }
+    public virtual Photo? Photo { get; set; }
 
-        [DataType(DataType.Date)]
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
-
-        public string? UserId { get; set; }
-        public User? User { get; set; }
-
-        public int PostId { get; set; }
-        public Post? Post { get; set; }
-
-        public ICollection<Favorite>? Favorites { get; set; }
-    }
+    public virtual Post Post { get; set; } = null!;
 }
-

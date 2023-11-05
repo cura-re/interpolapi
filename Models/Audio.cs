@@ -1,8 +1,13 @@
+﻿using System;
+using System.Collections.Generic;
+
 namespace interpolapi.Models;
 
-public class Audio 
+public partial class Audio
 {
-    public string ImageId { get; set; }
-    public string FileName { get; set; }
-    public byte[] AudioData { get; set; }
+    public string AudioId { get; set; } = null!;
+
+    public string? FileName { get; set; }
+
+    public byte[]? AudioData { get; set; }
 }
