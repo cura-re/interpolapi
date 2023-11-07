@@ -20,10 +20,14 @@ namespace interpolapi.Controllers
         }
 
         // GET: Actions
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<ActionTable>>> Index()
         {
+            if (_context.ActionTables == null)
+            {
+                return NotFound();
+            }
             var interpolContext = _context.ActionTables.Include(a => a.Pin);
-            return View(await interpolContext.ToListAsync());
+            return await interpolContext.ToListAsync();
         }
 
         // GET: Actions/Details/5

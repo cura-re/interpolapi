@@ -15,23 +15,3 @@ build_property.SupportLocalizedComponentNames =
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
 build_property.MSBuildProjectDirectory = /Users/blehjo/projects/interpol/interpolapi
 build_property._RazorSourceGeneratorDebug = 
-
-[/Users/blehjo/projects/interpol/interpolapi/Views/Communities/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbXVuaXRpZXMvQ3JlYXRlLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/blehjo/projects/interpol/interpolapi/Views/Communities/Delete.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbXVuaXRpZXMvRGVsZXRlLmNzaHRtbA==
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/blehjo/projects/interpol/interpolapi/Views/Communities/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbXVuaXRpZXMvRGV0YWlscy5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/blehjo/projects/interpol/interpolapi/Views/Communities/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbXVuaXRpZXMvRWRpdC5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[/Users/blehjo/projects/interpol/interpolapi/Views/Communities/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ29tbXVuaXRpZXMvSW5kZXguY3NodG1s
-build_metadata.AdditionalFiles.CssScope = 
