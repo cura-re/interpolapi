@@ -1,2 +1,3 @@
 obj/
-/obj
+appsettings.json
+appsettings.Development.json
