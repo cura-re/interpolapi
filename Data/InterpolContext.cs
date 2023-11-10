@@ -78,10 +78,12 @@ public partial class InterpolContext : DbContext
 
     public virtual DbSet<Video> Videos { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("server=localhost;Database=interpol;User Id=sa;Password=D&senrascanco0608;MultipleActiveResultSets=true;TrustServerCertificate=True;Encrypt=False;");
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        var databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
+        optionsBuilder.UseSqlServer(databaseConnection);
+    }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ActionTable>(entity =>

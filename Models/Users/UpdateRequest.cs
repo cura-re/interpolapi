@@ -4,23 +4,23 @@ namespace interpolapi.Models.Users
 {
     public class UpdateRequest
     {
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = null!;
 
-        public string LastName { get; set; }
+        public string LastName { get; set; } = null!;
 
-        public string Username { get; set; }
+        public string Username { get; set; } = null!;
 
-        public string Password { get; set; }
+        public string Password { get; set; } = null!;
 
         [DataType(DataType.Date)]
-        private DateTime DateOfBirth { get; set; }
+        private DateTime DateOfBirth { get; set; } 
 
         [DataType(DataType.EmailAddress)]
-        public string EmailAddress { get; set; }
+        public string EmailAddress { get; set; } = null!;
 
-        public string About { get; set; }
+        public string About { get; set; } = null!;
 
-        public IFormFile? FormFile { get; set; }
+        public IFormFile? FormFile { get; set; } = null!;
     }
 }
 

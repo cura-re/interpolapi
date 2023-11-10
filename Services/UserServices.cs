@@ -112,7 +112,7 @@ namespace interpolapi.Services
         private InterpolUser GetUser(string id)
         {
             var user = _context.InterpolUsers.Find(id);
-            //if (user == null) throw new KeyNotFoundException("User not found");
+            if (user == null) throw new KeyNotFoundException("User not found");
             return user;
         }
 

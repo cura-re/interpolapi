@@ -16,8 +16,10 @@ namespace interpolapi.Authorization
 
             // authorization
             var user = (InterpolUser)context.HttpContext.Items["User"];
-            if (user == null)
+            if (user == null) 
+            {
                 context.Result = new JsonResult(new { message = "Unauthorized user" }) { StatusCode = StatusCodes.Status401Unauthorized };
+            }
         }
     }
 }
