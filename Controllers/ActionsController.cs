@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Data.SqlClient;  
+using System.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +28,14 @@ namespace interpolapi.Controllers
             {
                 return NotFound();
             }
+            IList<ActionTable> employeeList = new List<ActionTable>(); 
+            var databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
+            using (SqlConnection connection = new SqlConnection(databaseConnection))
+            {
+                SqlCommand command = new SqlCommand("queryString", connection);
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+            } 
             var interpolContext = _context.ActionTables.Include(a => a.Pin);
             return await interpolContext.ToListAsync();
         }
