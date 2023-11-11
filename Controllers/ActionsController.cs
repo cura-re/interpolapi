@@ -7,6 +7,7 @@ using System.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using interpolapi.Data;
 using interpolapi.Models;
 
@@ -15,10 +16,15 @@ namespace interpolapi.Controllers
     public class ActionsController : Controller
     {
         private readonly InterpolContext _context;
+        private readonly IConfiguration _configuration;
+        private string? databaseConnection;
 
-        public ActionsController(InterpolContext context)
+        public ActionsController(InterpolContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+            databaseConnection = _configuration.GetConnectionString("InterpolDb");
+            // databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
         }
 
         // GET: Actions
@@ -28,35 +34,52 @@ namespace interpolapi.Controllers
             {
                 return NotFound();
             }
-            IList<ActionTable> employeeList = new List<ActionTable>(); 
-            var databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
-            using (SqlConnection connection = new SqlConnection(databaseConnection))
+            IList<ActionTable> actionsList = new List<ActionTable>(); 
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                SqlCommand command = new SqlCommand("queryString", connection);
+                SqlCommand command = new SqlCommand("interpol.getActions", connection);
                 command.Connection.Open();
-                command.ExecuteNonQuery();
+                SqlDataReader reader = command.ExecuteReader();
+                while(reader.Read())
+                {
+                    var action = new ActionTable()
+                    {
+                        ActionId = reader["ActionId"].ToString(),
+                        ActionName = reader["ActionName"].ToString(),
+                        ActionDescription = reader["ActionDescription"].ToString(),
+                        DateCreated = Convert.ToDateTime(reader["DateCreated"]),
+                        PinId = Convert.ToString(reader["PinId"])
+                    };
+                    actionsList.Add(action);
+                }
             } 
-            var interpolContext = _context.ActionTables.Include(a => a.Pin);
-            return await interpolContext.ToListAsync();
+            return actionsList.ToList();
         }
 
         // GET: Actions/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<ActionResult<ActionTable>> Details(string id)
         {
             if (id == null || _context.ActionTables == null)
             {
                 return NotFound();
             }
 
-            var actionTable = await _context.ActionTables
-                .Include(a => a.Pin)
-                .FirstOrDefaultAsync(m => m.ActionId == id);
-            if (actionTable == null)
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                return NotFound();
-            }
-
-            return View(actionTable);
+                SqlCommand command = new SqlCommand("queryString", connection);
+                command.Connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                var action = new ActionTable();
+                while(reader.Read())
+                {
+                    action.ActionId = reader["ActionId"].ToString();
+                    action.ActionName = reader["ActionName"].ToString();
+                    action.ActionDescription = reader["ActionDescription"].ToString();
+                    action.DateCreated = Convert.ToDateTime(reader["DateCreated"]);
+                    action.PinId = Convert.ToString(reader["PinId"]);
+                }
+                return action;
+            } 
         }
 
         // GET: Actions/Create

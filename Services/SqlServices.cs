@@ -1,33 +1,32 @@
-using interpolapi.Data;
 using AutoMapper;
+using System.Data.SqlClient;
+using interpolapi.Data;
 using interpolapi.Authorization;
+using interpolapi.Models;
 
 namespace interpolapi.Services;
 
 public interface ISqlService
 {
-    // Function for saving an image
+    // Connect to sql
+    void ConnectToSql(string queryString);
+    // SqlDataReader Connect
     Task<string> SaveImage(IFormFile imageFile);
-    // Function for deleting an image
     void DeleteImage(string imageName);
-    // Function for saving an audio file
     Task<string> SaveAudio(IFormFile imageFile);
-    // Function for deleting an audio file
     void DeleteAudio(string imageName);
-    // Function for saving a video
     Task<string> SaveVideo(IFormFile imageFile);
-    // Function for deleting a video
     void DeleteVideo(string imageName);
 }
 
-public class SqlServices : ISqlService
+public class SqlService : ISqlService
 {
     private InterpolContext _context;
     private IJwtUtils _jwtUtils;
     private readonly IMapper _mapper;
     private readonly IWebHostEnvironment _hostEnvironment;
 
-    public SqlServices(
+    public SqlService(
         InterpolContext context,
         IJwtUtils jwtUtils,
         IMapper mapper,
@@ -37,6 +36,17 @@ public class SqlServices : ISqlService
         _jwtUtils = jwtUtils;
         _mapper = mapper;
         _hostEnvironment = hostEnvironment;
+    }
+    
+    public void ConnectToSql(string queryString)
+    {
+        var databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
+        using (SqlConnection connection = new SqlConnection(databaseConnection))
+        {
+            SqlCommand command = new SqlCommand(queryString, connection);
+            command.Connection.Open();
+            command.ExecuteNonQuery();
+        } 
     }
     public async Task<string> SaveImage(IFormFile imageFile)
     {
