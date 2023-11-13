@@ -3,7 +3,8 @@
 CREATE PROCEDURE interpol.importImage (
     @ImageLink NVARCHAR(100), 
     @ImageSource NVARCHAR(1000),
-    @ImageData NVARCHAR(1000)
+    @ImageData NVARCHAR(1000),
+    @ImageId NVARCHAR(1000) OUTPUT
 )
 AS
 BEGIN
@@ -11,13 +12,13 @@ BEGIN
     DECLARE @tsql NVARCHAR (2000);
     SET NOCOUNT ON
     SET @Path2OutFile = CONCAT (
-        @ImageLink,
+        @ImageSource,
         '\', 
-        @ImageSource
+        @ImageLink
     );
     SET @tsql = 'insert into interpol.photo (image_link, image_source, image_data) ' +
         'OUTPUT inserted.photo_id' +
-        ' SELECT ' + '''' + @ImageLink + '''' + ',' + '''' + @ImageSource + '''' + ', * ' + 
+        ' SELECT ' + '''' + @ImageLink + '''' + ',' + '''' + @ImageData + '''' + ', * ' + 
         'FROM Openrowset( Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as img'
     EXEC (@tsql)
     SET NOCOUNT OFF
@@ -243,10 +244,11 @@ CREATE PROCEDURE interpol.addUser
     @ImageLink NVARCHAR (100), 
     @ImageSource NVARCHAR (1000),
     @ImageData NVARCHAR (1000),
-    @responseMessage NVARCHAR(250) OUTPUT
+    @ImageId NVARCHAR(1000) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
+    DECLARE @responseMessage NVARCHAR(250) OUTPUT
     DECLARE @salt UNIQUEIDENTIFIER=NEWID()
     DECLARE @dateCreated DATETIME=GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
