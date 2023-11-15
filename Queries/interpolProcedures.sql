@@ -4,7 +4,7 @@ CREATE PROCEDURE interpol.importImage (
     @ImageLink NVARCHAR(100), 
     @ImageSource NVARCHAR(1000),
     @ImageData NVARCHAR(1000),
-    @ImageId NVARCHAR(1000) OUTPUT
+    @ImageId NVARCHAR(50) OUTPUT
 )
 AS
 BEGIN
@@ -17,14 +17,19 @@ BEGIN
         @ImageLink
     );
     SET @tsql = 'insert into interpol.photo (image_link, image_source, image_data) ' +
-        'OUTPUT inserted.photo_id' +
+        'OUTPUT inserted.photo_id ' +
         ' SELECT ' + '''' + @ImageLink + '''' + ',' + '''' + @ImageData + '''' + ', * ' + 
-        'FROM Openrowset( Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as img'
+        'FROM Openrowset( Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as img' 
     EXEC (@tsql)
+    -- SELECT @ImageId = inserted.photo_id
     SET NOCOUNT OFF
 END
 GO
 
+insert into interpol.photo (image_link, image_source, image_data)
+output inserted.photo_id into @ImageId
+select @ImageLink, @ImageSource
+from Openrowset( Bulk @Path2OutFile, Single_Blob) as img
 --
 
 CREATE PROCEDURE interpol.exportImage (
@@ -162,7 +167,7 @@ GO
 
 --
 
-CREATE PROCEDURE interpol.usp_ExportVideo (
+CREATE PROCEDURE interpol.exportVideo (
    @FileName NVARCHAR(100),
    @VideoData VARBINARY(MAX)
 )
@@ -241,24 +246,29 @@ CREATE PROCEDURE interpol.addUser
     @pEmailAddress NVARCHAR(100),
     @pPassword NVARCHAR(50), 
     @pAbout NVARCHAR(MAX),
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
-    @ImageId NVARCHAR(1000) OUTPUT
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageSource NVARCHAR (1000) = NULL,
+    @ImageData NVARCHAR (1000) = NULL,
+    @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
-    DECLARE @responseMessage NVARCHAR(250) OUTPUT
     DECLARE @salt UNIQUEIDENTIFIER=NEWID()
     DECLARE @dateCreated DATETIME=GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        INSERT INTO interpol.interpol_user (user_name, first_name, last_name, date_of_birth, date_created, email_address, user_password, salt, about, photo_id)
-        VALUES(@pUserName, @pFirstName, @pLastName, @pDateOfBirth, @dateCreated, @pEmailAddress, HASHBYTES('SHA2_512', @pPassword+CAST(@salt AS NVARCHAR(36))), @salt, @pAbout, @ReturnValue)
-
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN 
+            INSERT INTO interpol.interpol_user (user_name, first_name, last_name, date_of_birth, date_created, email_address, user_password, salt, about)
+            VALUES(@pUserName, @pFirstName, @pLastName, @pDateOfBirth, @dateCreated, @pEmailAddress, HASHBYTES('SHA2_512', @pPassword+CAST(@salt AS NVARCHAR(36))), @salt, @pAbout)
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageSource, @ImageData, @ImageId = @ReturnValue OUTPUT
+            INSERT INTO interpol.interpol_user (user_name, first_name, last_name, date_of_birth, date_created, email_address, user_password, salt, about, photo_id)
+            VALUES(@pUserName, @pFirstName, @pLastName, @pDateOfBirth, @dateCreated, @pEmailAddress, HASHBYTES('SHA2_512', @pPassword+CAST(@salt AS NVARCHAR(36))), @salt, @pAbout, @ReturnValue)
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -271,7 +281,7 @@ GO
 CREATE PROCEDURE interpol.login
     @pUserName NVARCHAR(254),
     @pPassword NVARCHAR(50),
-    @responseMessage NVARCHAR(250)='' OUTPUT
+    @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
