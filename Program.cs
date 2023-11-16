@@ -13,7 +13,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services
-    .AddEntityFrameworkSqlServer()
     .AddDbContext<InterpolContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("InterpolDb")));
 

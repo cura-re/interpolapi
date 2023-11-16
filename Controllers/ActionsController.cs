@@ -24,7 +24,6 @@ namespace interpolapi.Controllers
             _context = context;
             _configuration = configuration;
             databaseConnection = _configuration.GetConnectionString("InterpolDb");
-            // databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
         }
 
         // GET: Actions

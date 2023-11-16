@@ -1,5 +1,44 @@
 -- Image Procedures
 
+CREATE PROCEDURE interpol.getPhotos 
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+        SELECT photo_id, image_link, image_source, image_data
+        FROM interpol.photo
+    END 
+    SET NOCOUNT OFF
+END
+
+CREATE PROCEDURE interpol.getSinglePhoto
+    @PhotoId NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+        SELECT photo_id, image_link, image_source, image_data
+        FROM interpol.photo
+        WHERE photo_id = @PhotoId
+    END 
+    SET NOCOUNT OFF
+END
+
+CREATE PROCEDURE interpol.deleteImage (
+    @PhotoId NVARCHAR(50)
+)
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+        DELETE FROM interpol.photo
+        WHERE photo_id = @PhotoId
+    END 
+    SET NOCOUNT OFF
+END
+END
+GO
+
 CREATE PROCEDURE interpol.importImage (
     @ImageLink NVARCHAR(100), 
     @ImageData NVARCHAR(1000),
@@ -22,11 +61,10 @@ BEGIN
 END
 GO
 
---
+-- Audio Procedures
 
 CREATE PROCEDURE interpol.exportImage (
    @ImageLink NVARCHAR(100),
-   @ImageSource NVARCHAR(1000),
    @ImageData NVARCHAR (1000)
 )
 AS
@@ -44,9 +82,8 @@ BEGIN
     );
  
    SET @Path2OutFile = CONCAT (
-        @ImageLink,
-        '\', 
-        @ImageSource
+        '\',
+        @ImageLink
     );
     BEGIN TRY
         EXEC sp_OACreate 'ADODB.Stream' ,@Obj OUTPUT;
@@ -66,7 +103,7 @@ BEGIN
 END
 GO
 
--- Audio Procedures
+--
 
 CREATE PROCEDURE interpol.importAudio (
     @FileName NVARCHAR(100), 
@@ -276,7 +313,7 @@ CREATE PROCEDURE interpol.login
 AS
 BEGIN
     SET NOCOUNT ON
-    DECLARE @user_Id uniqueidentifier
+    DECLARE @user_Id UNIQUEIDENTIFIER
     IF EXISTS (SELECT TOP 1 user_id FROM interpol.interpol_user WHERE user_name=@pUserName)
     BEGIN
         SET @user_id=(SELECT user_id FROM interpol.interpol_user WHERE user_name=@pUserName AND user_password=HASHBYTES('SHA2_512', @pPassword+CAST(salt AS NVARCHAR(36))))
@@ -295,7 +332,7 @@ GO
 --
 
 CREATE PROCEDURE interpol.updateUser
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pUserName NVARCHAR(50), 
     @pFirstName NVARCHAR(40) = NULL, 
     @pLastName NVARCHAR(40) = NULL,
@@ -303,22 +340,29 @@ CREATE PROCEDURE interpol.updateUser
     @pEmailAddress NVARCHAR(100),
     @pPassword NVARCHAR(50), 
     @pAbout NVARCHAR(MAX),
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
     DECLARE @salt UNIQUEIDENTIFIER=NEWID()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        UPDATE interpol.interpol_user 
-        SET user_name = @pUserName, first_name = @pFirstName, last_name = @pLastName, date_of_birth = @pDateOfBirth, email_address = @pEmailAddress, user_password = HASHBYTES('SHA2_512', @pPassword+CAST(@salt AS NVARCHAR(36))), about = @pAbout, photo_id = @ReturnValue, salt = @salt
-        WHERE user_id = @pUserId
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN
+            UPDATE interpol.interpol_user 
+            SET user_name = @pUserName, first_name = @pFirstName, last_name = @pLastName, date_of_birth = @pDateOfBirth, email_address = @pEmailAddress, user_password = HASHBYTES('SHA2_512', @pPassword+CAST(@salt AS NVARCHAR(36))), about = @pAbout, salt = @salt
+            WHERE user_id = @pUserId
+            SET @responseMessage='Success'
+        END
+    ELSE 
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            UPDATE interpol.interpol_user 
+            SET user_name = @pUserName, first_name = @pFirstName, last_name = @pLastName, date_of_birth = @pDateOfBirth, email_address = @pEmailAddress, user_password = HASHBYTES('SHA2_512', @pPassword+CAST(@salt AS NVARCHAR(36))), about = @pAbout, photo_id = @ReturnValue, salt = @salt
+            WHERE user_id = @pUserId
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -329,7 +373,7 @@ GO
 --
 
 CREATE PROCEDURE interpol.deleteUser
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pPassword NVARCHAR(50)
 AS
 BEGIN
@@ -376,22 +420,28 @@ GO
 
 CREATE PROCEDURE interpol.addPost 
     @pPostContent NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
     DECLARE @pDateCreated DATETIME = GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        INSERT INTO interpol.post (post_content, date_created, user_id, photo_id)
-        VALUES(@pPostContent, @pDateCreated, @pUserId, @ReturnValue)
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN 
+            INSERT INTO interpol.post (post_content, date_created, user_id)
+            VALUES(@pPostContent, @pDateCreated, @pUserId)
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            INSERT INTO interpol.post (post_content, date_created, user_id, photo_id)
+            VALUES(@pPostContent, @pDateCreated, @pUserId, @ReturnValue)
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -402,25 +452,32 @@ GO
 -- 
 
 CREATE PROCEDURE interpol.updatePost
-    @pPostId uniqueidentifier,
+    @pPostId UNIQUEIDENTIFIER,
     @pPostContent NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
     DECLARE @pDateCreated DATETIME = GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        UPDATE interpol.post 
-        SET post_content = @pPostContent, date_created = @pDateCreated, user_id = @pUserId, photo_id = @ReturnValue
-        WHERE post_id = @pPostId
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN 
+            UPDATE interpol.post 
+            SET post_content = @pPostContent, date_created = @pDateCreated, user_id = @pUserId
+            WHERE post_id = @pPostId
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            UPDATE interpol.post 
+            SET post_content = @pPostContent, date_created = @pDateCreated, user_id = @pUserId, photo_id = @ReturnValue
+            WHERE post_id = @pPostId
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -429,8 +486,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deletePost
-    @pPostId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pPostId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -482,22 +539,28 @@ GO
 
 CREATE PROCEDURE interpol.addCommunityPost 
     @pPostContent NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
     DECLARE @pDateCreated DATETIME = GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        INSERT INTO interpol.community_post (post_content, date_created, community_id, photo_id)
-        VALUES(@pPostContent, @pDateCreated, @pUserId, @ReturnValue)
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN 
+            INSERT INTO interpol.community_post (post_content, date_created, community_id)
+            VALUES(@pPostContent, @pDateCreated, @pUserId)
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            INSERT INTO interpol.community_post (post_content, date_created, community_id, photo_id)
+            VALUES(@pPostContent, @pDateCreated, @pUserId, @ReturnValue)
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -508,25 +571,32 @@ GO
 -- 
 
 CREATE PROCEDURE interpol.updateCommunityPost
-    @pPostId uniqueidentifier,
+    @pPostId UNIQUEIDENTIFIER,
     @pPostContent NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
     DECLARE @pDateCreated DATETIME = GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        UPDATE interpol.community_post 
-        SET post_content = @pPostContent, date_created = @pDateCreated, community_id = @pUserId, photo_id = @ReturnValue
-        WHERE post_id = @pPostId
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN 
+            UPDATE interpol.community_post 
+            SET post_content = @pPostContent, date_created = @pDateCreated, community_id = @pUserId
+            WHERE post_id = @pPostId
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            UPDATE interpol.community_post 
+            SET post_content = @pPostContent, date_created = @pDateCreated, community_id = @pUserId, photo_id = @ReturnValue
+            WHERE post_id = @pPostId
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -535,8 +605,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteCommunityPost
-    @pPostId uniqueidentifier,
-    @pCommunityID uniqueidentifier,
+    @pPostId UNIQUEIDENTIFIER,
+    @pCommunityID UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -572,7 +642,7 @@ GO
 CREATE PROCEDURE interpol.getSingleArtificialIntelligence
     @pAiName NVARCHAR(254) NULL,
     @pAiId NVARCHAR(250) NULL,
-    @pUserId uniqueidentifier
+    @pUserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON
@@ -589,23 +659,29 @@ CREATE PROCEDURE interpol.addArtificialIntelligence
     @pAiName NVARCHAR(50), 
     @pAiRole NVARCHAR(40) = NULL, 
     @pAiDescription NVARCHAR(40) = NULL,
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
     DECLARE @DateCreated DATETIME=GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        INSERT INTO interpol.artificial_intelligence (ai_name, ai_role, ai_description, date_created, user_id, photo_id)
-        VALUES(@pAiName, @pAiRole, @pAiDescription, @DateCreated, @pUserId, @ReturnValue)
+    IF (@ImageLink IS NULL)
+        BEGIN
+            INSERT INTO interpol.artificial_intelligence (ai_name, ai_role, ai_description, date_created, user_id)
+            VALUES(@pAiName, @pAiRole, @pAiDescription, @DateCreated, @pUserId)
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            INSERT INTO interpol.artificial_intelligence (ai_name, ai_role, ai_description, date_created, user_id, photo_id)
+            VALUES(@pAiName, @pAiRole, @pAiDescription, @DateCreated, @pUserId, @ReturnValue)
 
-        SET @responseMessage='Success'
-    END TRY
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -616,14 +692,13 @@ GO
 --
 
 CREATE PROCEDURE interpol.updateArtificialIntelligence
-    @pAiId uniqueidentifier,
+    @pAiId UNIQUEIDENTIFIER,
     @pAiName NVARCHAR(50), 
     @pAiRole NVARCHAR(40) = NULL, 
     @pAiDescription NVARCHAR(40) = NULL,
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -631,13 +706,21 @@ BEGIN
     DECLARE @salt UNIQUEIDENTIFIER=NEWID()
     DECLARE @DateCreated DATETIME=GETDATE()
     DECLARE @ReturnValue NVARCHAR(50)
-    BEGIN TRY
-        EXEC @ReturnValue = interpol.importImage @ImageLink, @ImageSource, @ImageData
-        UPDATE interpol.artificial_intelligence 
-        SET ai_name = @pAiName, ai_role = @pAiRole, ai_description = @pAiDescription, date_created = @DateCreated, user_id = @pUserId, photo_id = @ReturnValue
-        WHERE ai_id = @pAiId
-        SET @responseMessage='Success'
-    END TRY
+    IF (@ImageLink IS NULL)
+        BEGIN
+            UPDATE interpol.artificial_intelligence 
+            SET ai_name = @pAiName, ai_role = @pAiRole, ai_description = @pAiDescription, date_created = @DateCreated, user_id = @pUserId
+            WHERE ai_id = @pAiId
+            SET @responseMessage='Success'
+        END
+    ELSE
+        BEGIN TRY
+            EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+            UPDATE interpol.artificial_intelligence 
+            SET ai_name = @pAiName, ai_role = @pAiRole, ai_description = @pAiDescription, date_created = @DateCreated, user_id = @pUserId, photo_id = @ReturnValue
+            WHERE ai_id = @pAiId
+            SET @responseMessage='Success'
+        END TRY
     BEGIN CATCH
         SET @responseMessage=ERROR_MESSAGE() 
     END CATCH
@@ -648,7 +731,7 @@ GO
 --
 
 CREATE PROCEDURE interpol.deleteArtificialIntelligence
-    @pAiId uniqueidentifier
+    @pAiId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON
@@ -695,7 +778,7 @@ GO
 CREATE PROCEDURE interpol.addChannel 
     @pChannelName NVARCHAR(100),
     @pChannelDescription NVARCHAR(MAX) NULL,
-    @pCommunityId uniqueidentifier,
+    @pCommunityId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -716,10 +799,10 @@ GO
 -- 
 
 CREATE PROCEDURE interpol.updateChannel
-    @pChannelId uniqueidentifier,
+    @pChannelId UNIQUEIDENTIFIER,
     @pChannelDescription NVARCHAR(MAX),
     @pChannelName NVARCHAR(100),
-    @pCommunityId uniqueidentifier,
+    @pCommunityId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -739,8 +822,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteChannel
-    @pChannelId uniqueidentifier,
-    @pCommunityId uniqueidentifier,
+    @pChannelId UNIQUEIDENTIFIER,
+    @pCommunityId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -793,7 +876,7 @@ GO
 CREATE PROCEDURE interpol.addAction
     @pActionName NVARCHAR(100),
     @pActionDescription NVARCHAR(MAX) NULL,
-    @pPinId uniqueidentifier,
+    @pPinId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -814,10 +897,10 @@ GO
 -- 
 
 CREATE PROCEDURE interpol.updateAction
-    @pActionId uniqueidentifier,
+    @pActionId UNIQUEIDENTIFIER,
     @pActionName NVARCHAR(100),
     @pActionDescription NVARCHAR(MAX),
-    @pPinId uniqueidentifier,
+    @pPinId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -837,8 +920,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteAction
-    @pActionId uniqueidentifier,
-    @pPinId uniqueidentifier,
+    @pActionId UNIQUEIDENTIFIER,
+    @pPinId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -870,7 +953,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getUserChats
-    @pUserId uniqueidentifier
+    @pUserId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON
@@ -885,8 +968,8 @@ GO
 
 CREATE PROCEDURE interpol.addChat
     @pChatTitle NVARCHAR(100),
-    @pAiId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pAiId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -905,10 +988,10 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateChat
-    @pChatId uniqueidentifier,
+    @pChatId UNIQUEIDENTIFIER,
     @pChatTitle NVARCHAR(100),
-    @pAiId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pAiId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -928,8 +1011,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteChat
-    @pChatId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pChatId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @responseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -965,7 +1048,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleCommunity
-    @pCommunityId uniqueidentifier,
+    @pCommunityId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
@@ -986,22 +1069,29 @@ GO
 CREATE PROCEDURE interpol.addCommunity
     @pCommunityName NVARCHAR(100),
     @pCommunityDescription NVARCHAR(MAX) = NULL,
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
         DECLARE @DateCreated DATETIME = GETDATE()
-        DECLARE @pPhotoId uniqueidentifier 
-        BEGIN TRY
-            EXEC @pPhotoId = interpol.importImage @ImageLink, @ImageSource, @ImageData
-            INSERT INTO interpol.community (community_name, community_description, date_created, user_id, photo_id)
-            VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId, @pPhotoId)
-            SET @pResponseMessage = 'Success'
-        END TRY
+        DECLARE @pPhotoId UNIQUEIDENTIFIER 
+        DECLARE @ReturnValue NVARCHAR(50)
+        IF (@ImageLink IS NULL)
+            BEGIN
+                INSERT INTO interpol.community (community_name, community_description, date_created, user_id)
+                VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId)
+                SET @pResponseMessage = 'Success'
+            END
+        ELSE
+            BEGIN TRY
+                EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+                INSERT INTO interpol.community (community_name, community_description, date_created, user_id, photo_id)
+                VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId, @pPhotoId)
+                SET @pResponseMessage = 'Success'
+            END TRY
         BEGIN CATCH
             SET @pResponseMessage = ERROR_MESSAGE()
         END CATCH
@@ -1010,19 +1100,19 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateCommunity
-    @pCommunityId uniqueidentifier,
+    @pCommunityId UNIQUEIDENTIFIER,
     @pCommunityName NVARCHAR(100),
     @pCommunityDescription NVARCHAR(MAX) = NULL,
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @ImageLink NVARCHAR (100) = NULL, 
-    @ImageSource NVARCHAR (1000) = NULL,
     @ImageData NVARCHAR (1000) = NULL,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
         DECLARE @DateCreated DATETIME = GETDATE()
-        DECLARE @pPhotoId uniqueidentifier 
+        DECLARE @pPhotoId UNIQUEIDENTIFIER 
+        DECLARE @ReturnValue NVARCHAR(50)
         BEGIN TRY
             IF @ImageLink IS NULL OR @ImageLink = ''
                 BEGIN
@@ -1033,7 +1123,7 @@ BEGIN
                 END
             ELSE
                 BEGIN
-                    EXEC @pPhotoId = interpol.importImage @ImageLink, @ImageSource, @ImageData
+                    EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
                     UPDATE interpol.community
                     SET community_name = @pCommunityName, community_description = @pCommunityDescription, date_created = @DateCreated, user_id = @pUserId, photo_id = @pPhotoId
                     WHERE community_id = @pCommunityId
@@ -1048,8 +1138,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteCommunity
-    @pCommunityId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pCommunityId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1069,7 +1159,7 @@ GO
 -- Device Procedure
 
 CREATE PROCEDURE interpol.getDevices
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1088,8 +1178,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleDevice
-    @pUserId uniqueidentifier,
-    @pDeviceId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1110,7 +1200,7 @@ GO
 CREATE PROCEDURE interpol.addDevice
     @pDeviceName NVARCHAR(100),
     @pDeviceDescription NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1129,10 +1219,10 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateDevice
-    @pDeviceId uniqueidentifier,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pDeviceName NVARCHAR(100),
     @pDeviceDescription NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1152,8 +1242,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteDevice
-    @pDeviceId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pDeviceId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1190,7 +1280,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getUserDocfiles
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1209,8 +1299,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleDocfile
-    @pDocFileId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pDocFileId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1230,7 +1320,7 @@ GO
 
 CREATE PROCEDURE interpol.addDocfile
     @pTitle NVARCHAR(100),
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1249,9 +1339,9 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateDocfile
-    @pDocFileId uniqueidentifier,
+    @pDocFileId UNIQUEIDENTIFIER,
     @pTitle NVARCHAR(100),
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1271,8 +1361,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteDocfile
-    @pDocFileId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pDocFileId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1309,7 +1399,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getUserFavorites
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1328,7 +1418,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleFavorite
-    @pFavoriteId uniqueidentifier,
+    @pFavoriteId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1348,8 +1438,8 @@ GO
 
 CREATE PROCEDURE interpol.addFavorite
     @pContentType NCHAR(10),
-    @pContentId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pContentId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1368,8 +1458,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteFavorite
-    @pFavoriteId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pFavoriteId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1389,7 +1479,7 @@ GO
 -- Follower Procedure
 
 CREATE PROCEDURE interpol.getFollowers
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1408,7 +1498,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleFollower
-    @pFollowerId uniqueidentifier,
+    @pFollowerId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1427,8 +1517,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.addFollower
-    @pUserId uniqueidentifier,
-    @pFollowerId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pFollowerId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1446,8 +1536,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteFollower
-    @pUserId uniqueidentifier,
-    @pFollowerId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pFollowerId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1484,7 +1574,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getUserGltfs
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1503,7 +1593,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleGltf
-    @pGltfId uniqueidentifier,
+    @pGltfId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1524,7 +1614,7 @@ GO
 CREATE PROCEDURE interpol.addGltf
     @pFileName NVARCHAR(50),
     @pFileType CHAR(10),
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1543,10 +1633,10 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateGltf
-    @pGltfId uniqueidentifier,
+    @pGltfId UNIQUEIDENTIFIER,
     @pFileName NVARCHAR(50),
     @pFileType CHAR(10),
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1566,8 +1656,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteGltf
-    @pGltfId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pGltfId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1587,7 +1677,7 @@ GO
 -- Member Procedure
 
 CREATE PROCEDURE interpol.getMembers
-    @pCommunityId uniqueidentifier,
+    @pCommunityId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1606,8 +1696,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleMember
-    @pMemberId uniqueidentifier,
-    @pCommunityId uniqueidentifier,
+    @pMemberId UNIQUEIDENTIFIER,
+    @pCommunityId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1626,8 +1716,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.addMember
-    @pUserId uniqueidentifier,
-    @pCommunityId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pCommunityId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1645,8 +1735,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteMember
-    @pMemberId uniqueidentifier,
-    @pCommunityId uniqueidentifier,
+    @pMemberId UNIQUEIDENTIFIER,
+    @pCommunityId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1666,7 +1756,7 @@ GO
 -- Message Procedure
 
 CREATE PROCEDURE interpol.getMessages
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1685,8 +1775,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleMessage
-    @pUserId uniqueidentifier,
-    @pMessageId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pMessageId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1706,8 +1796,8 @@ GO
 
 CREATE PROCEDURE interpol.addMessage
     @pMessageTitle NVARCHAR(50),
-    @pUserId uniqueidentifier,
-    @pFollowerId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pFollowerId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1725,9 +1815,9 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteMessage
-    @pMessageId uniqueidentifier,
-    @pUserId uniqueidentifier,
-    @pFollowerId uniqueidentifier,
+    @pMessageId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
+    @pFollowerId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1747,7 +1837,7 @@ GO
 -- Moveable Procedure
 
 CREATE PROCEDURE interpol.getMoveables
-    @pDocFileId uniqueidentifier,
+    @pDocFileId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1766,8 +1856,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleMoveable
-    @pMoveableId uniqueidentifier,
-    @pDocFileId uniqueidentifier,
+    @pMoveableId UNIQUEIDENTIFIER,
+    @pDocFileId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1789,7 +1879,7 @@ CREATE PROCEDURE interpol.addMoveable
     @pPositionX TINYINT,
     @pPositionY TINYINT,
     @pPositionZ TINYINT,
-    @pDocFileId uniqueidentifier,
+    @pDocFileId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1807,11 +1897,11 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateMoveable
-    @pMoveableId uniqueidentifier,
+    @pMoveableId UNIQUEIDENTIFIER,
     @pPositionX TINYINT,
     @pPositionY TINYINT,
     @pPositionZ TINYINT,
-    @pDocFileId uniqueidentifier,
+    @pDocFileId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1829,8 +1919,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteMoveable
-    @pMoveableId uniqueidentifier,
-    @pDocFileId uniqueidentifier,
+    @pMoveableId UNIQUEIDENTIFIER,
+    @pDocFileId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1850,7 +1940,7 @@ GO
 -- Panel Procedure
 
 CREATE PROCEDURE interpol.getUserPanels
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1869,7 +1959,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSinglePanel
-    @pPanelId uniqueidentifier,
+    @pPanelId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1889,16 +1979,16 @@ GO
 
 CREATE PROCEDURE interpol.addPanel
     @pPanelTitle NVARCHAR(50),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
         DECLARE @pDateCreated DATETIME = GETDATE()
-        DECLARE @pPhotoId uniqueidentifier
+        DECLARE @pPhotoId UNIQUEIDENTIFIER
+        DECLARE @ReturnValue NVARCHAR(50)
         BEGIN TRY
             IF @ImageLink IS NULL OR @ImageLink = ''
                 BEGIN
@@ -1908,7 +1998,7 @@ BEGIN
                 END
             ELSE 
                 BEGIN
-                    EXEC @pPhotoId = interpol.importImage @ImageLink, @ImageSource, @ImageData
+                    EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
                     INSERT INTO interpol.panel (panel_title, date_created, user_id, photo_id)
                     VALUES (@pPanelTitle, @pDateCreated, @pUserId, @pPhotoId)
                     SET @pResponseMessage = 'Success'
@@ -1922,24 +2012,32 @@ END
 GO
 
 CREATE PROCEDURE interpol.updatePanel
-    @pPanelId uniqueidentifier,
+    @pPanelId UNIQUEIDENTIFIER,
     @pPanelTitle NVARCHAR(50),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
         DECLARE @pDateCreated DATETIME = GETDATE()
-        DECLARE @pPhotoId uniqueidentifier 
-        BEGIN TRY
-            EXEC @pPhotoId = interpol.importImage @ImageLink, @ImageSource, @ImageData
-            UPDATE interpol.panel
-            SET panel_title = @pPanelTitle, date_created = @pDateCreated, user_id = @pUserId, photo_id = @pPhotoId
-            SET @pResponseMessage = 'Success'
-        END TRY
+        DECLARE @pPhotoId UNIQUEIDENTIFIER 
+        DECLARE @ReturnValue NVARCHAR(50)
+        IF (@ImageLink IS NULL)
+            BEGIN
+                UPDATE interpol.panel
+                SET panel_title = @pPanelTitle, date_created = @pDateCreated, user_id = @pUserId
+                WHERE panel_id = @pPanelId
+                SET @pResponseMessage = 'Success'
+            END 
+        ELSE
+            BEGIN TRY
+                EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+                UPDATE interpol.panel
+                SET panel_title = @pPanelTitle, date_created = @pDateCreated, user_id = @pUserId, photo_id = @pPhotoId
+                SET @pResponseMessage = 'Success'
+            END TRY
         BEGIN CATCH
             SET @pResponseMessage = ERROR_MESSAGE()
         END CATCH
@@ -1948,8 +2046,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deletePanel
-    @pPanelId uniqueidentifier,
-    @pUserId uniqueidentifier,
+    @pPanelId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1969,7 +2067,7 @@ GO
 -- Note Procedure
 
 CREATE PROCEDURE interpol.getNotes
-    @pPanelId uniqueidentifier,
+    @pPanelId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -1988,8 +2086,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleNote
-    @pPanelId uniqueidentifier,
-    @pNoteId uniqueidentifier,
+    @pPanelId UNIQUEIDENTIFIER,
+    @pNoteId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2009,19 +2107,29 @@ GO
 
 CREATE PROCEDURE interpol.addNote
     @pNoteTitle NVARCHAR(50),
-    @pUserId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pPanelId NVARCHAR(50),
+    @pUserId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
-        DECLARE @pPhotoId uniqueidentifier
-        BEGIN TRY
-            EXEC @pPhotoId = interpol.importImage @ImageLink, @ImageSource, @ImageData
-            SET @pResponseMessage = 'Success'
-        END TRY
+        DECLARE @pPhotoId UNIQUEIDENTIFIER
+        DECLARE @ReturnValue NVARCHAR(50)
+        IF (@ImageLink IS NULL)
+            BEGIN
+                INSERT INTO interpol.note (note_title, panel_id)
+                VALUES (@pNoteTitle, @pPanelId)
+                SET @pResponseMessage = 'Success'
+            END
+        ELSE
+            BEGIN TRY
+                EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
+                INSERT INTO interpol.note (note_title, panel_id, photo_id)
+                VALUES (@pNoteTitle, @pPanelId, @ReturnValue)
+                SET @pResponseMessage = 'Success'
+            END TRY
         BEGIN CATCH
             SET @pResponseMessage = ERROR_MESSAGE()
         END CATCH
@@ -2030,17 +2138,17 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateNote
-    @pNoteId uniqueidentifier,
+    @pNoteId UNIQUEIDENTIFIER,
     @pNoteTitle NVARCHAR(50),   
-    @pPanelId uniqueidentifier,
-    @ImageLink NVARCHAR (100), 
-    @ImageSource NVARCHAR (1000),
-    @ImageData NVARCHAR (1000),
+    @pPanelId UNIQUEIDENTIFIER,
+    @ImageLink NVARCHAR (100) = NULL, 
+    @ImageData NVARCHAR (1000) = NULL,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
-        DECLARE @pPhotoId uniqueidentifier
+        DECLARE @pPhotoId UNIQUEIDENTIFIER
+        DECLARE @ReturnValue NVARCHAR(50)
         BEGIN TRY
             IF @ImageLink IS NULL OR @ImageLink = ''
                 BEGIN
@@ -2051,7 +2159,7 @@ BEGIN
                 END
             ELSE
                 BEGIN
-                    EXEC @pPhotoId = interpol.importImage @ImageLink, @ImageSource, @ImageData
+                    EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
                     UPDATE interpol.note 
                     SET note_title = @pNoteTitle, panel_id = @pPanelId
                     WHERE note_id = @pNoteId
@@ -2066,8 +2174,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteNote
-    @pNoteId uniqueidentifier,
-    @pPanelId uniqueidentifier,
+    @pNoteId UNIQUEIDENTIFIER,
+    @pPanelId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2087,7 +2195,7 @@ GO
 -- Pin Procedure
 
 CREATE PROCEDURE interpol.getPins
-    @pDeviceId uniqueidentifier,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2106,8 +2214,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSinglePin
-    @pPinId uniqueidentifier,
-    @pDeviceId uniqueidentifier,
+    @pPinId UNIQUEIDENTIFIER,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2128,7 +2236,7 @@ GO
 CREATE PROCEDURE interpol.addPin
     @pPinLocation NVARCHAR(50),
     @pIsAnalog BIT,
-    @pDeviceId uniqueidentifier,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2146,10 +2254,10 @@ END
 GO
 
 CREATE PROCEDURE interpol.updatePin
-    @pPinId uniqueidentifier,
+    @pPinId UNIQUEIDENTIFIER,
     @pPinLocation NVARCHAR(50),
     @pIsAnalog BIT,
-    @pDeviceId uniqueidentifier,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2168,8 +2276,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deletePin
-    @pPinId uniqueidentifier,
-    @pDeviceId uniqueidentifier,
+    @pPinId UNIQUEIDENTIFIER,
+    @pDeviceId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2206,7 +2314,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getUserPrompts
-    @pUserId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2225,7 +2333,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.getChatPrompts
-    @pChatId uniqueidentifier,
+    @pChatId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2245,8 +2353,8 @@ GO
 
 CREATE PROCEDURE interpol.addPrompt
     @pRequest NVARCHAR(MAX),
-    @pUserId uniqueidentifier,
-    @pChatId uniqueidentifier,
+    @pUserId UNIQUEIDENTIFIER,
+    @pChatId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2264,9 +2372,9 @@ END
 GO
 
 CREATE PROCEDURE interpol.deletePrompt
-    @pPromptId uniqueidentifier,
-    @pUserId uniqueidentifier,
-    @pChatId uniqueidentifier,
+    @pPromptId UNIQUEIDENTIFIER,
+    @pUserId UNIQUEIDENTIFIER,
+    @pChatId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2286,7 +2394,7 @@ GO
 -- Shape Procedure
 
 CREATE PROCEDURE interpol.getShapes
-    @pGltfId uniqueidentifier,
+    @pGltfId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2305,8 +2413,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleShape
-    @pShapeId uniqueidentifier,
-    @pGltfId uniqueidentifier,
+    @pShapeId UNIQUEIDENTIFIER,
+    @pGltfId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2336,7 +2444,7 @@ CREATE PROCEDURE interpol.addShape
     @pShapeLength TINYINT,
     @pColor NVARCHAR(50),
     @pColorValue TINYINT,
-    @pGltfId uniqueidentifier,
+    @pGltfId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2354,7 +2462,7 @@ END
 GO
 
 CREATE PROCEDURE interpol.updateShape
-    @pShapeId uniqueidentifier,
+    @pShapeId UNIQUEIDENTIFIER,
     @pShapeName NVARCHAR(50),
     @pPositionX TINYINT,
     @pPositionY TINYINT,
@@ -2366,7 +2474,7 @@ CREATE PROCEDURE interpol.updateShape
     @pShapeLength TINYINT,
     @pColor NVARCHAR(50),
     @pColorValue TINYINT,
-    @pGltfId uniqueidentifier,
+    @pGltfId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN
@@ -2385,8 +2493,8 @@ END
 GO
 
 CREATE PROCEDURE interpol.deleteShape
-    @pShapeId uniqueidentifier,
-    @pGltfId uniqueidentifier,
+    @pShapeId UNIQUEIDENTIFIER,
+    @pGltfId UNIQUEIDENTIFIER,
     @pResponseMessage NVARCHAR(100) OUTPUT
 AS
 BEGIN

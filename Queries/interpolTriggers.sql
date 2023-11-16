@@ -1,10 +1,26 @@
+CREATE TRIGGER interpol.trg_photo_delete
+   ON interpol.photo
+   INSTEAD OF DELETE
+AS 
+BEGIN
+   SET NOCOUNT ON
+      DELETE FROM interpol.interpol_user WHERE photo_id IN (SELECT photo_id FROM DELETED)
+      DELETE FROM interpol.post WHERE photo_id IN (SELECT photo_id FROM DELETED)
+      DELETE FROM interpol.community_post WHERE photo_id IN (SELECT photo_id FROM DELETED)
+      DELETE FROM interpol.artificial_intelligence WHERE photo_id IN (SELECT photo_id FROM DELETED)
+      DELETE FROM interpol.community WHERE photo_id IN (SELECT photo_id FROM DELETED)
+      DELETE FROM interpol.panel WHERE photo_id IN (SELECT photo_id FROM DELETED)
+      DELETE FROM interpol.note WHERE photo_id IN (SELECT photo_id FROM DELETED)
+   SET NOCOUNT OFF
+END
+GO
+
 CREATE TRIGGER interpol.trg_user_delete
    ON interpol.interpol_user
    INSTEAD OF DELETE
 AS 
 BEGIN
  SET NOCOUNT ON;
- DELETE FROM interpol.photo WHERE photo_id IN (SELECT photo_id FROM DELETED)
  DELETE FROM interpol.post WHERE user_id IN (SELECT user_id FROM DELETED)
  DELETE FROM interpol.community WHERE user_id IN (SELECT user_id FROM DELETED)
  DELETE FROM interpol.member WHERE user_id IN (SELECT user_id FROM DELETED)
