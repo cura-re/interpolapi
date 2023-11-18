@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Data.SqlClient;  
 using System.Configuration;
+using System.Text;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Configuration;
+using System.Data.SqlClient;  
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using interpolapi.Data;
 using interpolapi.Models;
-using System.Text;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace interpolapi.Controllers
 {
@@ -121,7 +121,7 @@ namespace interpolapi.Controllers
             }
             await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                SqlCommand command = new SqlCommand("interpol.getSinglePhoto", connection);
+                SqlCommand command = new SqlCommand("interpol.deleteImage", connection);
                 command.CommandType = System.Data.CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@ImageLink", id);
                 command.Connection.Open();

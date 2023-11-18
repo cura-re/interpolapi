@@ -243,8 +243,9 @@ AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
-        SELECT user_id, user_name, first_name, about, photo_id
-        FROM interpol.interpol_user
+        SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+        FROM interpol.interpol_user u 
+        LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
     END 
     SET NOCOUNT OFF
 END
@@ -252,16 +253,38 @@ GO
 
 --
 
-CREATE PROCEDURE interpol.getSingleUser
-    @pUserName NVARCHAR(254) NULL,
-    @pUserId NVARCHAR(250) NULL
+CREATE PROCEDURE interpol.getSingleUserName
+    @pUserName NVARCHAR(254)
 AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
-        SELECT user_id, user_name, first_name, about, photo_id
-        FROM interpol.interpol_user
-        WHERE user_name LIKE  '%' + @pUserName + '%' OR user_id = @pUserId 
+        SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+        FROM interpol.interpol_user u 
+        LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
+        WHERE user_name LIKE  '%' + @pUserName + '%'
+    END 
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleUser
+    @pUserName NVARCHAR(254) = NULL,
+    @pUserId NVARCHAR(250) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+        IF (@pUserName IS NOT NULL)
+            SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+            FROM interpol.interpol_user u 
+            LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
+            WHERE user_name LIKE  '%' + @pUserName + '%'
+        ELSE
+            SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+            FROM interpol.interpol_user u 
+            LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
+            WHERE user_id = @pUserId 
     END 
     SET NOCOUNT OFF
 END

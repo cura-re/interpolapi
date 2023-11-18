@@ -7,13 +7,14 @@ namespace interpolapi.Data;
 
 public partial class InterpolContext : DbContext
 {
-    public InterpolContext()
-    {
-    }
+    private readonly IConfiguration _configuration;
+    private string? databaseConnection;
 
-    public InterpolContext(DbContextOptions<InterpolContext> options)
+    public InterpolContext(DbContextOptions<InterpolContext> options, IConfiguration configuration)
         : base(options)
     {
+        _configuration = configuration;
+        databaseConnection = _configuration.GetConnectionString("InterpolDb");
     }
 
     public virtual DbSet<ActionTable> ActionTables { get; set; }
@@ -81,7 +82,6 @@ public partial class InterpolContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        var databaseConnection = System.Configuration.ConfigurationManager.ConnectionStrings["InterpolDb"].ConnectionString;
         optionsBuilder.UseSqlServer(databaseConnection);
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)

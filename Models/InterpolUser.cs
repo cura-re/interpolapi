@@ -11,7 +11,7 @@ public partial class InterpolUser
 
     public string FirstName { get; set; } = null!;
 
-    public string? LastName { get; set; }
+    public string LastName { get; set; } = null!;
 
     public DateTime DateOfBirth { get; set; }
 
@@ -23,9 +23,13 @@ public partial class InterpolUser
 
     public Guid? Salt { get; set; }
 
-    public string? About { get; set; }
+    public string About { get; set; } = null!;
 
-    public string? PhotoId { get; set; }
+    public string PhotoId { get; set; } = null!;
+
+    public string ImageLink { get; set; } = null!;
+
+    public byte[] ImageData { get; set; } = null!;
 
     public virtual ICollection<ArtificialIntelligence> ArtificialIntelligences { get; set; } = new List<ArtificialIntelligence>();
 

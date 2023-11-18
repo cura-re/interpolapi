@@ -24,7 +24,7 @@ create table interpol.interpol_user (
     user_id uniqueidentifier PRIMARY KEY NOT NULL DEFAULT newid(),
     user_name NVARCHAR(50) NOT NULL,
     first_name NVARCHAR(50) NOT NULL,
-    last_name NVARCHAR(100) NULL,
+    last_name NVARCHAR(100) NOT NULL,
     date_of_birth DATE NOT NULL,
     date_created DATETIME NOT NULL,
     email_address NVARCHAR(320) NOT NULL,
@@ -324,3 +324,6 @@ create table interpol.shape (
 
 -- EXEC sp_MSforeachtable 'DROP TABLE ?'
 -- GO
+
+-- ALTER TABLE table_name
+-- ALTER COLUMN column_name datatype;
