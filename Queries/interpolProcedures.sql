@@ -10,6 +10,7 @@ BEGIN
     END 
     SET NOCOUNT OFF
 END
+GO
 
 CREATE PROCEDURE interpol.getSinglePhoto
     @PhotoId NVARCHAR(50)
@@ -23,6 +24,7 @@ BEGIN
     END 
     SET NOCOUNT OFF
 END
+GO
 
 CREATE PROCEDURE interpol.deleteImage (
     @PhotoId NVARCHAR(50)
@@ -35,7 +37,6 @@ BEGIN
         WHERE photo_id = @PhotoId
     END 
     SET NOCOUNT OFF
-END
 END
 GO
 
