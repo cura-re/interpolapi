@@ -44,6 +44,8 @@ namespace interpolapi.Controllers
                         UserId = reader["user_id"].ToString(),
                         UserName = reader["user_name"].ToString(),
                         FirstName = reader["first_name"].ToString(),
+                        // DateOfBirth = Convert.ToDateTime(reader["date_of_birth"]),
+                        // DateCreated = (DateTime)reader["date_created"],
                         // LastName = reader["last_name"].ToString(),
                         About = reader["about"].ToString(),
                         PhotoId = reader["photo_id"].ToString(),
@@ -156,21 +158,48 @@ namespace interpolapi.Controllers
             } 
         }
 
-        // POST: Users/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPut]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id, string password)
+        public async Task<InterpolUser> Update([FromForm] InterpolUser user)
+        {
+            string userId = HttpContext.Request.Cookies["user"];
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            {
+                SqlCommand command = new SqlCommand("interpol.updateUser", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@pUseId", userId);
+                command.Parameters.AddWithValue("@pUserName", user.UserName);
+                command.Parameters.AddWithValue("@pFirstName", user.FirstName);
+                command.Parameters.AddWithValue("@pLastName", user.LastName);
+                command.Parameters.AddWithValue("@pDateOfBirth", user.DateOfBirth);
+                command.Parameters.AddWithValue("@pEmailAddress", user.EmailAddress);
+                // command.Parameters.AddWithValue("@pPassword", user.Password);
+                command.Parameters.AddWithValue("@pAbout", user.About);
+                command.Parameters.AddWithValue("@ImageLink", user.ImageLink);
+                command.Parameters.AddWithValue("@ImageData", user.ImageData);
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+                return user;
+            } 
+        }
+
+        // POST: Users/Delete/5
+        [HttpDelete, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
             if (_context.InterpolUsers == null)
             {
                 return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
             }
+
+            string userId = HttpContext.Request.Cookies["user"];
             await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
                 SqlCommand command = new SqlCommand("interpol.deleteUser", connection);
                 command.CommandType = System.Data.CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@pUserId", id);
-                command.Parameters.AddWithValue("@pPassword", password);
+                command.Parameters.AddWithValue("@pPassword", userId);
                 command.Connection.Open();
                 command.ExecuteNonQuery();
                 return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");

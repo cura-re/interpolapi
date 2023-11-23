@@ -416,8 +416,10 @@ AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
-        SELECT post_id, post_content, date_created, user_id, photo_id
-        FROM interpol.post
+        SELECT p.post_id, p.post_content, p.date_created, p.user_id, p.photo_id, o.image_data, o.image_link, u.user_name, u.first_name
+        FROM interpol.post p 
+        LEFT JOIN interpol.photo o ON p.photo_id = o.photo_id
+        LEFT JOIN interpol.interpol_user u ON p.user_id = u.user_id
     END 
     SET NOCOUNT OFF
 END
@@ -426,15 +428,24 @@ GO
 --
 
 CREATE PROCEDURE interpol.getSinglePost
-    @pPostId NVARCHAR(254) NULL,
-    @pPostContent NVARCHAR(MAX) NULL
+    @pPostId NVARCHAR(254) =  NULL,
+    @pPostContent NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
-        SELECT post_id, post_content, date_created, user_id, photo_id
-        FROM interpol.post
-        WHERE post_id = @pPostId OR post_content LIKE '%' + @pPostContent + '%'
+    IF (@pPostContent IS NOT NULL)
+        SELECT p.post_id, p.post_content, p.date_created, p.user_id, p.photo_id, o.image_data, o.image_link, u.user_name, u.first_name
+        FROM interpol.post p 
+        LEFT JOIN interpol.photo o ON p.photo_id = o.photo_id
+        LEFT JOIN interpol.interpol_user u ON p.user_id = u.user_id
+        WHERE p.post_content LIKE '%' + @pPostContent + '%'
+    ELSE
+        SELECT p.post_id, p.post_content, p.date_created, p.user_id, p.photo_id, o.image_data, o.image_link, u.user_name, u.first_name
+        FROM interpol.post p 
+        LEFT JOIN interpol.photo o ON p.photo_id = o.photo_id
+        LEFT JOIN interpol.interpol_user u ON p.user_id = u.user_id
+        WHERE p.post_id = @pPostId OR post_content LIKE '%' + @pPostContent + '%'
     END
     SET NOCOUNT OFF 
 END

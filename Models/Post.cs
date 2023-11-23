@@ -15,6 +15,10 @@ public partial class Post
 
     public string? PhotoId { get; set; }
 
+    public byte[]? ImageData { get; set; }
+
+    public string? ImageLink { get; set; }
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual Photo? Photo { get; set; }
