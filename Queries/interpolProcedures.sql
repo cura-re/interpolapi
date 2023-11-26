@@ -40,25 +40,28 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE interpol.importImage (
-    @ImageLink NVARCHAR(100), 
-    @ImageData NVARCHAR(1000),
-    @ImageId NVARCHAR(50) OUTPUT
+CREATE PROCEDURE interpol.importAudio (
+    @FileName NVARCHAR(100), 
+    @AudioData NVARCHAR(1000),
+    @AudioId NVARCHAR(50) OUTPUT
 )
 AS
 BEGIN
     DECLARE @NewIdentifier NVARCHAR(50) = CONVERT(NVARCHAR(50), NEWID());
     DECLARE @Path2OutFile NVARCHAR (2000);
     DECLARE @tsql NVARCHAR (2000);
+    SET NOCOUNT ON
     SET @Path2OutFile = CONCAT (
+        @AudioData,
         '\', 
-        @ImageLink
+        @FileName
     );
-    SET @tsql = 'insert into interpol.photo (photo_id, image_link, image_source, image_data) ' + 
-    ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @ImageLink + '''' + ',' + '''' + @ImageData + '''' + ', * ' + 
-    'FROM Openrowset( Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as img' 
+    SET @tsql = 'insert into interpol.audio (audio_id, file_name, audio_data) ' +
+        ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @FileName + '''' + ', * ' + 
+        'FROM Openrowset(Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
     EXEC (@tsql)
-    SET @ImageId = @NewIdentifier
+    SET @AudioId = @NewIdentifier
+    SET NOCOUNT OFF
 END
 GO
 
@@ -108,10 +111,12 @@ GO
 
 CREATE PROCEDURE interpol.importAudio (
     @FileName NVARCHAR(100), 
-    @AudioData NVARCHAR(1000)
+    @AudioData NVARCHAR(1000),
+    @AudioId NVARCHAR(50) OUTPUT
 )
 AS
 BEGIN
+    DECLARE @NewIdentifier NVARCHAR(50) = CONVERT(NVARCHAR(50), NEWID());
     DECLARE @Path2OutFile NVARCHAR (2000);
     DECLARE @tsql NVARCHAR (2000);
     SET NOCOUNT ON
@@ -120,10 +125,11 @@ BEGIN
         '\', 
         @AudioData
     );
-    SET @tsql = 'insert into interpol.audio (file_name, audio_data) ' +
-        ' SELECT ' + '''' + @FileName + '''' + ',' + '''' + @AudioData + '''' + ', * ' + 
-        'FROM Openrowset( Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
+    SET @tsql = 'insert into interpol.audio (audio_id, file_name, audio_data) ' +
+        ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @FileName + '''' + ',' + '''' + ', * ' + 
+        'FROM Openrowset(Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
     EXEC (@tsql)
+    SET @AudioId = @NewIdentifier
     SET NOCOUNT OFF
 END
 GO
@@ -170,6 +176,19 @@ BEGIN
     SET NOCOUNT OFF
 END
 GO
+
+CREATE PROCEDURE interpol.deleteAudio (
+    @AudioId NVARCHAR(50)
+)
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+        DELETE FROM interpol.audio
+        WHERE audio_id = @AudioId
+    END 
+    SET NOCOUNT OFF
+END
 
 -- Video Procedures
 
