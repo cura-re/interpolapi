@@ -7,48 +7,80 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using interpolapi.Data;
 using interpolapi.Models;
+using System.Data.SqlClient;
 
 namespace interpolapi.Controllers
 {
     public class AudiosController : Controller
     {
         private readonly InterpolContext _context;
+        private readonly IConfiguration _configuration;
+        private string? databaseConnection;
 
-        public AudiosController(InterpolContext context)
+        public AudiosController(InterpolContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+            databaseConnection = _configuration.GetConnectionString("InterpolDb");
         }
 
         // GET: Audios
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<Audio>>> Index()
         {
-              return _context.Audios != null ? 
-                          View(await _context.Audios.ToListAsync()) :
-                          Problem("Entity set 'InterpolContext.Audios'  is null.");
+            if (_context.Audios == null)
+            {
+                return NotFound();
+            }
+            IList<Audio> audioList = new List<Audio>(); 
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            {
+                SqlCommand command = new SqlCommand("interpol.getAudio", connection);
+                command.Connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                while(reader.Read())
+                {
+                    var audio = new Audio()
+                    {
+                        AudioId = reader["audio_id"].ToString(),
+                        FileName = reader["file_name"].ToString(),
+                    };
+                    if (!Convert.IsDBNull(reader["audio_data"])) 
+                    {
+                        audio.AudioData = (byte[])reader["audio_data"];
+                    }
+                    audioList.Add(audio);
+                }
+            } 
+            return audioList.ToList();
         }
 
         // GET: Audios/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<ActionResult<Audio>> Details(string id)
         {
             if (id == null || _context.Audios == null)
             {
                 return NotFound();
             }
 
-            var audio = await _context.Audios
-                .FirstOrDefaultAsync(m => m.AudioId == id);
-            if (audio == null)
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                return NotFound();
+                SqlCommand command = new SqlCommand("interpol.getSingleAudio", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@pAudioId", id);
+                command.Connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                var audio = new Audio();
+                while(reader.Read())
+                {
+                    audio.AudioId = reader["audio_id"].ToString();
+                    audio.FileName = reader["file_name"].ToString();
+                    if (!Convert.IsDBNull(reader["audio_data"])) 
+                    {
+                        audio.AudioData = (byte[])reader["audio_data"];
+                    }
+                }
+                return audio;
             }
-
-            return View(audio);
-        }
-
-        // GET: Audios/Create
-        public IActionResult Create()
-        {
-            return View();
         }
 
         // POST: Audios/Create
@@ -56,103 +88,60 @@ namespace interpolapi.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AudioId,FileName,AudioData")] Audio audio)
+        public async Task<Audio> Create([FromForm] Audio audio)
         {
-            if (ModelState.IsValid)
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                _context.Add(audio);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(audio);
-        }
-
-        // GET: Audios/Edit/5
-        public async Task<IActionResult> Edit(string id)
-        {
-            if (id == null || _context.Audios == null)
-            {
-                return NotFound();
-            }
-
-            var audio = await _context.Audios.FindAsync(id);
-            if (audio == null)
-            {
-                return NotFound();
-            }
-            return View(audio);
+                SqlCommand command = new SqlCommand("interpol.importAudio", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@FileName", audio.FileName);
+                command.Parameters.AddWithValue("@AudioData", audio.AudioData);
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+                return audio;
+            } 
         }
 
         // POST: Audios/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPut]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("AudioId,FileName,AudioData")] Audio audio)
+        public async Task<ActionResult<Audio>> Edit(string id, [FromForm] Audio audio)
         {
             if (id != audio.AudioId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                try
-                {
-                    _context.Update(audio);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!AudioExists(audio.AudioId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(audio);
-        }
-
-        // GET: Audios/Delete/5
-        public async Task<IActionResult> Delete(string id)
-        {
-            if (id == null || _context.Audios == null)
-            {
-                return NotFound();
-            }
-
-            var audio = await _context.Audios
-                .FirstOrDefaultAsync(m => m.AudioId == id);
-            if (audio == null)
-            {
-                return NotFound();
-            }
-
-            return View(audio);
+                SqlCommand command = new SqlCommand("interpol.updateAudio", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@FileName", audio.FileName);
+                command.Parameters.AddWithValue("@AudioData", audio.AudioData);
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+                return audio;
+            } 
         }
 
         // POST: Audios/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpDelete, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            if (_context.Audios == null)
+            string userId = HttpContext.Request.Cookies["user"];
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                return Problem("Entity set 'InterpolContext.Audios'  is null.");
-            }
-            var audio = await _context.Audios.FindAsync(id);
-            if (audio != null)
-            {
-                _context.Audios.Remove(audio);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+                SqlCommand command = new SqlCommand("interpol.deleteAudio", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@AudioId", id);
+                command.Parameters.AddWithValue("@pUserId", userId);
+                command.Connection.Open();
+                command.ExecuteNonQuery();
+                return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
+            } 
         }
 
         private bool AudioExists(string id)

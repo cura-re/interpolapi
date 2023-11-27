@@ -83,13 +83,6 @@ namespace interpolapi.Controllers
             } 
         }
 
-        // GET: Photos/Create
-        public IActionResult Create()
-        {
-            ViewData["PinId"] = new SelectList(_context.Pins, "PinId", "PinId");
-            return View();
-        }
-
         // POST: Photos/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -111,7 +104,7 @@ namespace interpolapi.Controllers
         }
 
         // POST: Photos/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpDelete, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {

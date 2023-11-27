@@ -160,8 +160,12 @@ namespace interpolapi.Controllers
 
         [HttpPut]
         [ValidateAntiForgeryToken]
-        public async Task<InterpolUser> Update([FromForm] InterpolUser user)
+        public async Task<ActionResult<InterpolUser>> Update(string id, [FromForm] InterpolUser user)
         {
+            if (id != user.UserId)
+            {
+                return NotFound();
+            }
             string userId = HttpContext.Request.Cookies["user"];
             await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
@@ -198,8 +202,8 @@ namespace interpolapi.Controllers
             {
                 SqlCommand command = new SqlCommand("interpol.deleteUser", connection);
                 command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pUserId", id);
-                command.Parameters.AddWithValue("@pPassword", userId);
+                command.Parameters.AddWithValue("@pUserId", userId);
+                command.Parameters.AddWithValue("@pPassword", id);
                 command.Connection.Open();
                 command.ExecuteNonQuery();
                 return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
