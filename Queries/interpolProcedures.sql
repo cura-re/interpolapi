@@ -121,12 +121,12 @@ BEGIN
     DECLARE @tsql NVARCHAR (2000);
     SET NOCOUNT ON
     SET @Path2OutFile = CONCAT (
-        @FileName,
+        @AudioData,
         '\', 
-        @AudioData
+        @FileName
     );
     SET @tsql = 'insert into interpol.audio (audio_id, file_name, audio_data) ' +
-        ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @FileName + '''' + ',' + '''' + ', * ' + 
+        ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @FileName + '''' + ', * ' + 
         'FROM Openrowset(Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
     EXEC (@tsql)
     SET @AudioId = @NewIdentifier
@@ -177,6 +177,33 @@ BEGIN
 END
 GO
 
+CREATE PROCEDURE interpol.getAudio 
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN   
+        SELECT audio_id, file_name, audio_data
+        FROM interpol.audio
+    END
+    SET NOCOUNT OFF
+END
+GO
+
+CREATE PROCEDURE interpol.getSingleAudio (
+    @AudioId NVARCHAR(50)
+)
+AS
+BEGIN
+    SET NOCOUNT ON
+    BEGIN
+        SELECT audio_id, file_name, audio_data
+        FROM interpol.audio
+        WHERE audio_id = @AudioId
+    END 
+    SET NOCOUNT OFF
+END
+GO
+
 CREATE PROCEDURE interpol.deleteAudio (
     @AudioId NVARCHAR(50)
 )
@@ -189,6 +216,7 @@ BEGIN
     END 
     SET NOCOUNT OFF
 END
+GO
 
 -- Video Procedures
 

@@ -66,7 +66,7 @@ namespace interpolapi.Controllers
             {
                 SqlCommand command = new SqlCommand("interpol.getSingleAudio", connection);
                 command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pAudioId", id);
+                command.Parameters.AddWithValue("@AudioId", id);
                 command.Connection.Open();
                 SqlDataReader reader = command.ExecuteReader();
                 var audio = new Audio();
