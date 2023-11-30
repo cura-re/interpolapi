@@ -40,30 +40,6 @@ BEGIN
 END
 GO
 
-CREATE PROCEDURE interpol.importAudio (
-    @FileName NVARCHAR(100), 
-    @AudioData NVARCHAR(1000),
-    @AudioId NVARCHAR(50) OUTPUT
-)
-AS
-BEGIN
-    DECLARE @NewIdentifier NVARCHAR(50) = CONVERT(NVARCHAR(50), NEWID());
-    DECLARE @Path2OutFile NVARCHAR (2000);
-    DECLARE @tsql NVARCHAR (2000);
-    SET NOCOUNT ON
-    SET @Path2OutFile = CONCAT (
-        @AudioData,
-        '\', 
-        @FileName
-    );
-    SET @tsql = 'insert into interpol.audio (audio_id, file_name, audio_data) ' +
-        ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @FileName + '''' + ', * ' + 
-        'FROM Openrowset(Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
-    EXEC (@tsql)
-    SET @AudioId = @NewIdentifier
-    SET NOCOUNT OFF
-END
-GO
 
 -- Audio Procedures
 
