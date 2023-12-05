@@ -470,10 +470,16 @@ AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
-        SELECT p.post_id, p.post_content, p.date_created, p.user_id, p.photo_id, o.image_data, o.image_link, u.user_name, u.first_name
-        FROM interpol.post p 
-        LEFT JOIN interpol.photo o ON p.photo_id = o.photo_id
-        LEFT JOIN interpol.interpol_user u ON p.user_id = u.user_id
+        SELECT 
+            u.user_id, u.user_name, u.first_name, ph.image_link, ph.image_data as profile_pic, p.post_id, p.post_content, p.photo_id, p.date_created, ph2.image_data as post_pic, ph2.image_link as post_link
+        FROM 
+            interpol.post p 
+        INNER JOIN
+            interpol.interpol_user u on u.user_id = p.user_id
+        LEFT JOIN 
+            interpol.photo ph on u.photo_id = ph.photo_id
+        LEFT JOIN 
+            interpol.photo ph2 on p.photo_id = ph2.photo_id;
     END 
     SET NOCOUNT OFF
 END
@@ -489,17 +495,29 @@ BEGIN
     SET NOCOUNT ON
     BEGIN
     IF (@pPostContent IS NOT NULL)
-        SELECT p.post_id, p.post_content, p.date_created, p.user_id, p.photo_id, o.image_data, o.image_link, u.user_name, u.first_name
-        FROM interpol.post p 
-        LEFT JOIN interpol.photo o ON p.photo_id = o.photo_id
-        LEFT JOIN interpol.interpol_user u ON p.user_id = u.user_id
+        SELECT 
+            u.user_id, u.user_name, u.first_name, ph.image_link, ph.image_data as profile_pic, p.post_id, p.post_content, p.photo_id, p.date_created, ph2.image_data as post_pic, ph2.image_link as post_link
+        FROM 
+            interpol.post p 
+        INNER JOIN
+            interpol.interpol_user u on u.user_id = p.user_id
+        LEFT JOIN 
+            interpol.photo ph on u.photo_id = ph.photo_id
+        LEFT JOIN 
+            interpol.photo ph2 on p.photo_id = ph2.photo_id
         WHERE p.post_content LIKE '%' + @pPostContent + '%'
     ELSE
-        SELECT p.post_id, p.post_content, p.date_created, p.user_id, p.photo_id, o.image_data, o.image_link, u.user_name, u.first_name
-        FROM interpol.post p 
-        LEFT JOIN interpol.photo o ON p.photo_id = o.photo_id
-        LEFT JOIN interpol.interpol_user u ON p.user_id = u.user_id
-        WHERE p.post_id = @pPostId OR post_content LIKE '%' + @pPostContent + '%'
+        SELECT 
+            u.user_id, u.user_name, u.first_name, ph.image_link, ph.image_data as profile_pic, p.post_id, p.post_content, p.photo_id, p.date_created, ph2.image_data as post_pic, ph2.image_link as post_link
+        FROM 
+            interpol.post p 
+        INNER JOIN
+            interpol.interpol_user u on u.user_id = p.user_id
+        LEFT JOIN 
+            interpol.photo ph on u.photo_id = ph.photo_id
+        LEFT JOIN 
+            interpol.photo ph2 on p.photo_id = ph2.photo_id
+        WHERE p.post_id = @pPostId OR p.post_content LIKE '%' + @pPostContent + '%'
     END
     SET NOCOUNT OFF 
 END

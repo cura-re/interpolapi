@@ -38,18 +38,27 @@ namespace interpolapi.Controllers
                 SqlDataReader reader = command.ExecuteReader();
                 while(reader.Read())
                 {
-                    var post = new Post()
+                    Post post = new Post()
                     {
                         PostId = reader["post_id"].ToString(),
                         PostContent = reader["post_content"].ToString(),
                         DateCreated = (DateTime)reader["date_created"],
                         PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["image_link"].ToString(),
-                        User = new InterpolUser() { UserName = reader["user_name"].ToString(), FirstName = reader["first_name"].ToString(), UserId = reader["user_id"].ToString()}
+                        ImageLink = reader["post_link"].ToString(),
+                        User = new InterpolUser() { 
+                            UserName = reader["user_name"].ToString(), 
+                            FirstName = reader["first_name"].ToString(), 
+                            UserId = reader["user_id"].ToString(), 
+                            ImageLink = reader["image_link"].ToString()
+                        }
                     };
-                    if (!Convert.IsDBNull(reader["image_data"])) 
+                    if (!Convert.IsDBNull(reader["profile_pic"])) 
                     {
-                        post.ImageData = (byte[])reader["image_data"];
+                        post.User.ImageData = (byte[])reader["profile_pic"];
+                    }
+                    if (!Convert.IsDBNull(reader["post_pic"])) 
+                    {
+                        post.ImageData = (byte[])reader["post_pic"];
                     }
                     postsList.Add(post);
                 }
@@ -80,14 +89,21 @@ namespace interpolapi.Controllers
                         PostContent = reader["post_content"].ToString(),
                         DateCreated = (DateTime)reader["date_created"],
                         PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["image_link"].ToString(),
+                        ImageLink = reader["post_link"].ToString(),
                         User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), FirstName = reader["first_name"].ToString(), UserId = reader["user_id"].ToString()
+                            UserName = reader["user_name"].ToString(), 
+                            FirstName = reader["first_name"].ToString(), 
+                            UserId = reader["user_id"].ToString(), 
+                            ImageLink = reader["image_link"].ToString()
                         }
                     };
-                    if (!Convert.IsDBNull(reader["image_data"])) 
+                    if (!Convert.IsDBNull(reader["profile_pic"])) 
                     {
-                        post.ImageData = (byte[])reader["image_data"];
+                        post.User.ImageData = (byte[])reader["profile_pic"];
+                    }
+                    if (!Convert.IsDBNull(reader["post_pic"])) 
+                    {
+                        post.ImageData = (byte[])reader["post_pic"];
                     }
                     postsList.Add(post);
                 }
@@ -117,14 +133,21 @@ namespace interpolapi.Controllers
                         post.PostContent = reader["post_content"].ToString();
                         post.DateCreated = (DateTime)reader["date_created"];
                         post.PhotoId = reader["photo_id"].ToString();
-                        post.ImageLink = reader["image_link"].ToString();
+                        post.ImageLink = reader["post_link"].ToString();
                         post.User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), FirstName = reader["first_name"].ToString(), UserId = reader["user_id"].ToString()
+                            UserName = reader["user_name"].ToString(), 
+                            FirstName = reader["first_name"].ToString(), 
+                            UserId = reader["user_id"].ToString(),
+                            ImageLink = reader["image_link"].ToString()
                         };
                     };
-                    if (!Convert.IsDBNull(reader["image_data"])) 
+                    if (!Convert.IsDBNull(reader["profile_pic"])) 
                     {
-                        post.ImageData = (byte[])reader["image_data"];
+                        post.User.ImageData = (byte[])reader["profile_pic"];
+                    }
+                    if (!Convert.IsDBNull(reader["post_pic"])) 
+                    {
+                        post.ImageData = (byte[])reader["post_pic"];
                     }
                 }
                 return post;
