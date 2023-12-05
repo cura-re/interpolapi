@@ -12,6 +12,8 @@ BEGIN
 END
 GO
 
+--
+
 CREATE PROCEDURE interpol.getSinglePhoto
     @PhotoId NVARCHAR(50)
 AS
@@ -25,6 +27,35 @@ BEGIN
     SET NOCOUNT OFF
 END
 GO
+
+--
+
+CREATE PROCEDURE interpol.importImage (
+    @ImageLink NVARCHAR(100), 
+    @ImageData NVARCHAR(1000),
+    @PhotoId NVARCHAR(50) OUTPUT
+)
+AS
+BEGIN
+    DECLARE @NewIdentifier NVARCHAR(50) = CONVERT(NVARCHAR(50), NEWID());
+    DECLARE @Path2OutFile NVARCHAR (2000);
+    DECLARE @tsql NVARCHAR (2000);
+    SET NOCOUNT ON
+    SET @Path2OutFile = CONCAT (
+        @ImageData,
+        '\', 
+        @ImageLink
+    );
+    SET @tsql = 'insert into interpol.photo (photo_id, image_link, image_source, image_data) ' +
+        ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @ImageLink + '''' + ',' + '''' + @ImageData + '''' + ', * ' + 
+        'FROM Openrowset(Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
+    EXEC (@tsql)
+    SET @PhotoId = @NewIdentifier
+    SET NOCOUNT OFF
+END
+GO
+
+--
 
 CREATE PROCEDURE interpol.deleteImage (
     @PhotoId NVARCHAR(50)
