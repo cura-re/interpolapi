@@ -314,9 +314,11 @@ AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
-        SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+        SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data, po.post_id, po.post_content, p2.image_data as post_pic, p2.image_link as post_link
         FROM interpol.interpol_user u 
         LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
+        LEFT JOIN interpol.post po ON u.user_id = po.user_id
+        LEFT JOIN interpol.photo p2 on po.photo_id = p2.photo_id
         WHERE user_name LIKE  '%' + @pUserName + '%'
     END 
     SET NOCOUNT OFF
@@ -331,15 +333,19 @@ BEGIN
     SET NOCOUNT ON
     BEGIN
         IF (@pUserName IS NOT NULL)
-            SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+            SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data, po.post_id, po.post_content, p2.image_data as post_pic, p2.image_link as post_link
             FROM interpol.interpol_user u 
             LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
+            LEFT JOIN interpol.post po ON u.user_id = po.user_id
+            LEFT JOIN interpol.photo p2 on po.photo_id = p2.photo_id
             WHERE user_name LIKE  '%' + @pUserName + '%'
         ELSE
-            SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data
+            SELECT u.user_id, u.user_name, u.first_name, u.about, u.photo_id, p.image_link, p.image_data, po.post_id, po.post_content, p2.image_data as post_pic, p2.image_link as post_link
             FROM interpol.interpol_user u 
             LEFT JOIN interpol.photo p ON u.photo_id = p.photo_id
-            WHERE user_id = @pUserId 
+            LEFT JOIN interpol.post po ON u.user_id = po.user_id
+            LEFT JOIN interpol.photo p2 on po.photo_id = p2.photo_id
+            WHERE u.user_id = @pUserId 
     END 
     SET NOCOUNT OFF
 END
