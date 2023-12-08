@@ -33,7 +33,7 @@ GO
 CREATE PROCEDURE interpol.importImage (
     @ImageLink NVARCHAR(100), 
     @ImageData NVARCHAR(1000),
-    @PhotoId NVARCHAR(50) OUTPUT
+    @ImageId NVARCHAR(50) OUTPUT
 )
 AS
 BEGIN
@@ -50,7 +50,7 @@ BEGIN
         ' SELECT ' + '''' + @NewIdentifier + '''' + ',' + '''' + @ImageLink + '''' + ',' + '''' + @ImageData + '''' + ', * ' + 
         'FROM Openrowset(Bulk ' + '''' + @Path2OutFile + '''' + ', Single_Blob) as FileData'
     EXEC (@tsql)
-    SET @PhotoId = @NewIdentifier
+    SET @ImageId = @NewIdentifier
     SET NOCOUNT OFF
 END
 GO
@@ -58,14 +58,14 @@ GO
 --
 
 CREATE PROCEDURE interpol.deleteImage (
-    @PhotoId NVARCHAR(50)
+    @ImageId NVARCHAR(50)
 )
 AS
 BEGIN
     SET NOCOUNT ON
     BEGIN
         DELETE FROM interpol.photo
-        WHERE photo_id = @PhotoId
+        WHERE photo_id = @ImageId
     END 
     SET NOCOUNT OFF
 END
@@ -1144,13 +1144,21 @@ GO
 -- Community Procedures
 
 CREATE PROCEDURE interpol.getCommunities
-    @pResponseMessage NVARCHAR(250) OUTPUT
 AS
 BEGIN
     SET NOCOUNT ON
+    DECLARE @pResponseMessage NVARCHAR(250)
     BEGIN TRY
-        SELECT community_id, community_name, community_description, date_created, user_id
-        FROM interpol.community
+        SELECT 
+            u.user_id, u.user_name, ph.image_link, ph.image_data as profile_pic, c.community_id, c.community_name, c.community_description, c.date_created, ph2.image_data as community_pic, ph2.image_link as community_link
+        FROM 
+            interpol.community c
+        INNER JOIN
+            interpol.interpol_user u on u.user_id = c.user_id
+        LEFT JOIN 
+            interpol.photo ph on u.photo_id = ph.photo_id
+        LEFT JOIN 
+            interpol.photo ph2 on c.photo_id = ph2.photo_id;
         SET @pResponseMessage = 'Success'
     END TRY
     BEGIN CATCH
@@ -1161,15 +1169,22 @@ END
 GO
 
 CREATE PROCEDURE interpol.getSingleCommunity
-    @pCommunityId UNIQUEIDENTIFIER,
-    @pResponseMessage NVARCHAR(250) OUTPUT
+    @pCommunityId UNIQUEIDENTIFIER
 AS
 BEGIN
     SET NOCOUNT ON
+    DECLARE @pResponseMessage NVARCHAR(250)
     BEGIN TRY
-        SELECT community_id, community_name, community_description, date_created, user_id
-        FROM interpol.community
-        WHERE community_id = @pCommunityId
+        SELECT 
+            u.user_id, u.user_name, ph.image_link, ph.image_data as profile_pic, c.community_id, c.community_name, c.community_description, c.date_created, ph2.image_data as community_pic, ph2.image_link as community_link
+        FROM 
+            interpol.community c
+        INNER JOIN
+            interpol.interpol_user u on u.user_id = c.user_id
+        LEFT JOIN 
+            interpol.photo ph on u.photo_id = ph.photo_id
+        LEFT JOIN 
+            interpol.photo ph2 on c.photo_id = ph2.photo_id;
         SET @pResponseMessage = 'Success'
     END TRY
     BEGIN CATCH
@@ -1184,26 +1199,24 @@ CREATE PROCEDURE interpol.addCommunity
     @pCommunityDescription NVARCHAR(MAX) = NULL,
     @pUserId UNIQUEIDENTIFIER,
     @ImageLink NVARCHAR (100) = NULL, 
-    @ImageData NVARCHAR (1000) = NULL,
-    @pResponseMessage NVARCHAR(100) OUTPUT
+    @ImageData NVARCHAR (1000) = NULL
 AS
 BEGIN
     SET NOCOUNT ON
         DECLARE @DateCreated DATETIME = GETDATE()
         DECLARE @pPhotoId UNIQUEIDENTIFIER 
         DECLARE @ReturnValue NVARCHAR(50)
+        DECLARE @pResponseMessage NVARCHAR(50)
         IF (@ImageLink IS NULL)
             BEGIN
                 INSERT INTO interpol.community (community_name, community_description, date_created, user_id)
                 VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId)
-                SET @pResponseMessage = 'Success'
             END
         ELSE
             BEGIN TRY
                 EXEC interpol.importImage @ImageLink, @ImageData, @ImageId = @ReturnValue OUTPUT
                 INSERT INTO interpol.community (community_name, community_description, date_created, user_id, photo_id)
-                VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId, @pPhotoId)
-                SET @pResponseMessage = 'Success'
+                VALUES (@pCommunityName, @pCommunityDescription, @DateCreated, @pUserId, @ReturnValue)
             END TRY
         BEGIN CATCH
             SET @pResponseMessage = ERROR_MESSAGE()

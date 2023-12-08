@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Data.SqlClient;  
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,37 +14,98 @@ namespace interpolapi.Controllers
     public class CommunitiesController : Controller
     {
         private readonly InterpolContext _context;
+        private readonly IConfiguration _configuration;
+        private string? databaseConnection;
 
-        public CommunitiesController(InterpolContext context)
+        public CommunitiesController(InterpolContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+            databaseConnection = _configuration.GetConnectionString("InterpolDb");
         }
 
         // GET: Communities
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<Community>>> Index()
         {
-            var interpolContext = _context.Communities.Include(c => c.Photo).Include(c => c.User);
-            return View(await interpolContext.ToListAsync());
+            if (_context.Communities == null)
+            {
+                return NotFound();
+            }
+            IList<Community> communities = new List<Community>();
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            {
+                SqlCommand command = new SqlCommand("interpol.getCommunities", connection);
+                command.Connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                while(reader.Read())
+                {
+                    Community community = new Community()
+                    {
+                        CommunityId = reader["community_id"].ToString(),
+                        CommunityName = reader["community_name"].ToString(),
+                        CommunityDescription = reader["community_description"].ToString(),
+                        // DateCreated = reader.GetDateTime(3),
+                        User = new InterpolUser() { 
+                            UserName = reader["user_name"].ToString(), 
+                            UserId = reader["user_id"].ToString(), 
+                            ImageLink = reader["image_link"].ToString()
+                        }
+                    };
+                    if (!Convert.IsDBNull(reader["profile_pic"])) 
+                    {
+                        community.User.ImageData = (byte[])reader["profile_pic"];
+                    }
+                    if (!Convert.IsDBNull(reader["community_pic"])) 
+                    {
+                        community.ImageData = (byte[])reader["community_pic"];
+                    }
+                    communities.Add(community);
+                }
+                return communities.ToList();
+            }
         }
 
         // GET: Communities/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<ActionResult<Community>> Details(string id)
         {
             if (id == null || _context.Communities == null)
             {
                 return NotFound();
             }
 
-            var community = await _context.Communities
-                .Include(c => c.Photo)
-                .Include(c => c.User)
-                .FirstOrDefaultAsync(m => m.CommunityId == id);
-            if (community == null)
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
             {
-                return NotFound();
-            }
-
-            return View(community);
+                SqlCommand command = new SqlCommand("interpol.getSingleCommunity", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@pCommunityId", id);
+                command.Connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                Community community = new Community();
+                while(reader.Read())
+                {
+                    {
+                        community.CommunityId = reader["community_id"].ToString();
+                        community.CommunityName = reader["community_name"].ToString();
+                        community.CommunityDescription = reader["community_description"].ToString();
+                        community.DateCreated = (DateTime)reader["date_created"];
+                        community.ImageLink = reader["community_link"].ToString();
+                        community.User = new InterpolUser() { 
+                            UserName = reader["user_name"].ToString(), 
+                            UserId = reader["user_id"].ToString(),
+                            ImageLink = reader["image_link"].ToString()
+                        };
+                    };
+                    if (!Convert.IsDBNull(reader["profile_pic"])) 
+                    {
+                        community.User.ImageData = (byte[])reader["profile_pic"];
+                    }
+                    if (!Convert.IsDBNull(reader["community_pic"])) 
+                    {
+                        community.ImageData = (byte[])reader["community_pic"];
+                    }
+                }
+                return community;
+            } 
         }
 
         // GET: Communities/Create
@@ -55,7 +117,7 @@ namespace interpolapi.Controllers
         }
 
         // POST: Communities/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // To protect from overcommunitying attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -91,7 +153,7 @@ namespace interpolapi.Controllers
         }
 
         // POST: Communities/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
+        // To protect from overcommunitying attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]

@@ -39,7 +39,7 @@ namespace interpolapi.Controllers
                 SqlDataReader reader = command.ExecuteReader();
                 while(reader.Read())
                 {
-                    var user = new InterpolUser()
+                    InterpolUser user = new InterpolUser()
                     {
                         UserId = reader["user_id"].ToString(),
                         UserName = reader["user_name"].ToString(),
@@ -129,8 +129,21 @@ namespace interpolapi.Controllers
                 SqlDataReader reader = command.ExecuteReader();
                 InterpolUser user = new InterpolUser();
                 IList<Post> posts = new List<Post>();
+                IList<Community> communities = new List<Community>();
                 while(reader.Read())
                 {
+                    Community community = new Community()
+                    {
+                        CommunityId = reader["community_id"].ToString(),
+                        CommunityName = reader["community_name"].ToString(),
+                        CommunityDescription = reader["community_description"].ToString(),
+                        ImageLink = reader["community_link"].ToString(),
+                    };
+                    if (!Convert.IsDBNull(reader["community_pic"])) 
+                    {
+                        community.ImageData = (byte[])reader["community_pic"];
+                    }
+                    communities.Add(community);
                     Post post = new Post()
                     {
                         PostId = reader["post_id"].ToString(),
@@ -152,6 +165,7 @@ namespace interpolapi.Controllers
                     user.PhotoId = reader["photo_id"].ToString();
                     user.ImageLink = reader["image_link"].ToString();
                     user.Posts = posts;
+                    user.Communities = communities;
                     if (!Convert.IsDBNull(reader["image_data"])) 
                     {
                         user.ImageData = (byte[])reader["image_data"];

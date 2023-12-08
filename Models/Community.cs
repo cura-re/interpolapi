@@ -16,6 +16,9 @@ public partial class Community
     public string UserId { get; set; } = null!;
 
     public string? PhotoId { get; set; }
+    public string ImageLink { get; set; } = null!;
+
+    public byte[] ImageData { get; set; } = null!;
 
     public virtual ICollection<Channel> Channels { get; set; } = new List<Channel>();
 
