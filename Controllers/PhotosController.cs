@@ -45,9 +45,9 @@ namespace interpolapi.Controllers
                 {
                     var photo = new Photo()
                     {
-                        PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["image_link"].ToString(),
-                        ImageSource = reader["image_source"].ToString(),
+                        PhotoId = reader["photo_id"].ToString() ?? "",
+                        ImageLink = reader["image_link"].ToString() ?? "",
+                        ImageSource = reader["image_source"].ToString() ?? "",
                         ImageData = (byte[])reader["image_data"]
                     };
                     photosList.Add(photo);
@@ -74,9 +74,9 @@ namespace interpolapi.Controllers
                 var photo = new Photo();
                 while(reader.Read())
                 {
-                    photo.PhotoId = reader["photo_id"].ToString();
-                    photo.ImageLink = reader["image_link"].ToString();
-                    photo.ImageSource = reader["image_source"].ToString();
+                    photo.PhotoId = reader["photo_id"].ToString() ?? "";
+                    photo.ImageLink = reader["image_link"].ToString() ?? "";
+                    photo.ImageSource = reader["image_source"].ToString() ?? "";
                     photo.ImageData = (byte[])reader["image_data"];
                 }
                 return photo;
