@@ -40,16 +40,16 @@ namespace interpolapi.Controllers
                 {
                     Post post = new Post()
                     {
-                        PostId = reader["post_id"].ToString(),
+                        PostId = reader["post_id"].ToString() ?? "",
                         PostContent = reader["post_content"].ToString(),
                         DateCreated = (DateTime)reader["date_created"],
                         PhotoId = reader["photo_id"].ToString(),
                         ImageLink = reader["post_link"].ToString(),
                         User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), 
-                            FirstName = reader["first_name"].ToString(), 
-                            UserId = reader["user_id"].ToString(), 
-                            ImageLink = reader["image_link"].ToString()
+                            UserName = reader["user_name"].ToString() ?? "", 
+                            FirstName = reader["first_name"].ToString() ?? "", 
+                            UserId = reader["user_id"].ToString() ?? "", 
+                            ImageLink = reader["image_link"].ToString() ?? ""
                         }
                     };
                     if (!Convert.IsDBNull(reader["profile_pic"])) 
@@ -85,16 +85,16 @@ namespace interpolapi.Controllers
                 {
                     Post post = new Post()
                     {
-                        PostId = reader["post_id"].ToString(),
-                        PostContent = reader["post_content"].ToString(),
+                        PostId = reader["post_id"].ToString() ?? "",
+                        PostContent = reader["post_content"].ToString() ?? "",
                         DateCreated = (DateTime)reader["date_created"],
-                        PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["post_link"].ToString(),
+                        PhotoId = reader["photo_id"].ToString() ?? "",
+                        ImageLink = reader["post_link"].ToString() ?? "",
                         User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), 
-                            FirstName = reader["first_name"].ToString(), 
-                            UserId = reader["user_id"].ToString(), 
-                            ImageLink = reader["image_link"].ToString()
+                            UserName = reader["user_name"].ToString() ?? "", 
+                            FirstName = reader["first_name"].ToString() ?? "", 
+                            UserId = reader["user_id"].ToString() ?? "", 
+                            ImageLink = reader["image_link"].ToString() ?? ""
                         }
                     };
                     if (!Convert.IsDBNull(reader["profile_pic"])) 
@@ -129,16 +129,16 @@ namespace interpolapi.Controllers
                 while(reader.Read())
                 {
                     {
-                        post.PostId = reader["post_id"].ToString();
-                        post.PostContent = reader["post_content"].ToString();
+                        post.PostId = reader["post_id"].ToString() ?? "";
+                        post.PostContent = reader["post_content"].ToString() ?? "";
                         post.DateCreated = (DateTime)reader["date_created"];
                         post.PhotoId = reader["photo_id"].ToString();
                         post.ImageLink = reader["post_link"].ToString();
                         post.User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), 
-                            FirstName = reader["first_name"].ToString(), 
-                            UserId = reader["user_id"].ToString(),
-                            ImageLink = reader["image_link"].ToString()
+                            UserName = reader["user_name"].ToString() ?? "", 
+                            FirstName = reader["first_name"].ToString() ?? "", 
+                            UserId = reader["user_id"].ToString() ?? "",
+                            ImageLink = reader["image_link"].ToString() ?? ""
                         };
                     };
                     if (!Convert.IsDBNull(reader["profile_pic"])) 
@@ -156,41 +156,49 @@ namespace interpolapi.Controllers
         
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<Post> Create([FromForm] Post post)
+        public async Task<ActionResult<Post>> Create([FromForm] Post post)
         {
-            string userId = HttpContext.Request.Cookies["user"];
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            if (HttpContext.Request.Cookies["user"] != null)
             {
-                SqlCommand command = new SqlCommand("interpol.addPost", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pUserId", userId);
-                command.Parameters.AddWithValue("@pPostContent", post.PostContent);
-                command.Parameters.AddWithValue("@ImageLink", post.ImageLink);
-                command.Parameters.AddWithValue("@ImageData", post.ImageData);
-                command.Connection.Open();
-                command.ExecuteNonQuery();
-                return post;
-            } 
+                string userId = HttpContext.Request.Cookies["user"] ?? "";
+                await using (SqlConnection connection = new SqlConnection(databaseConnection))
+                {
+                    SqlCommand command = new SqlCommand("interpol.addPost", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@pUserId", userId);
+                    command.Parameters.AddWithValue("@pPostContent", post.PostContent);
+                    command.Parameters.AddWithValue("@ImageLink", post.ImageLink);
+                    command.Parameters.AddWithValue("@ImageData", post.ImageData);
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    return post;
+                } 
+            }
+            return NotFound();
         }
 
         [HttpPut]
         [ValidateAntiForgeryToken]
-        public async Task<Post> Update([FromForm] Post post)
+        public async Task<ActionResult<Post>> Update([FromForm] Post post)
         {
-            string userId = HttpContext.Request.Cookies["user"];
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            if (HttpContext.Request.Cookies["user"] != null)
             {
-                SqlCommand command = new SqlCommand("interpol.updatePost", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pPostId", post.PostId);
-                command.Parameters.AddWithValue("@pPostContent", post.PostContent);
-                command.Parameters.AddWithValue("@pUseId", userId);
-                command.Parameters.AddWithValue("@ImageLink", post.ImageLink);
-                command.Parameters.AddWithValue("@ImageData", post.ImageData);
-                command.Connection.Open();
-                command.ExecuteNonQuery();
-                return post;
-            } 
+                string userId = HttpContext.Request.Cookies["user"] ?? "";
+                await using (SqlConnection connection = new SqlConnection(databaseConnection))
+                {
+                    SqlCommand command = new SqlCommand("interpol.updatePost", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@pPostId", post.PostId);
+                    command.Parameters.AddWithValue("@pPostContent", post.PostContent);
+                    command.Parameters.AddWithValue("@pUseId", userId);
+                    command.Parameters.AddWithValue("@ImageLink", post.ImageLink);
+                    command.Parameters.AddWithValue("@ImageData", post.ImageData);
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    return post;
+                } 
+            }
+            return NotFound();
         }
 
         [HttpDelete]
@@ -201,18 +209,21 @@ namespace interpolapi.Controllers
             {
                 return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
             }
-
-            string userId = HttpContext.Request.Cookies["user"];
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            if (HttpContext.Request.Cookies["user"] != null)
             {
-                SqlCommand command = new SqlCommand("interpol.deletePost", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pPostId", id);
-                command.Parameters.AddWithValue("@pUserId", userId);
-                command.Connection.Open();
-                command.ExecuteNonQuery();
-                return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
-            } 
+                string userId = HttpContext.Request.Cookies["user"] ?? "";
+                await using (SqlConnection connection = new SqlConnection(databaseConnection))
+                {
+                    SqlCommand command = new SqlCommand("interpol.deletePost", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@pPostId", id);
+                    command.Parameters.AddWithValue("@pUserId", userId);
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
+                } 
+            }
+            return NotFound();
         }
 
         private bool PostExists(string id)
