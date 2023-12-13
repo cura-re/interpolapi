@@ -79,29 +79,48 @@ namespace interpolapi.Controllers
                 command.Connection.Open();
                 SqlDataReader reader = command.ExecuteReader();
                 InterpolUser user = new InterpolUser();
+                IList<Community> communities = new List<Community>();
                 IList<Post> posts = new List<Post>();
                 while(reader.Read())
                 {
-                    Post post = new Post()
+                    if (reader["community_id"] != DBNull.Value)
                     {
-                        PostId = reader["post_id"].ToString(),
-                        PostContent = reader["post_content"].ToString(),
-                        // DateCreated = (DateTime)reader["date_created"],
-                        // PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["post_link"].ToString(),
-                    };
-                    if (!Convert.IsDBNull(reader["post_pic"])) 
-                    {
-                        post.ImageData = (byte[])reader["post_pic"];
+                        Community community = new Community()
+                        {
+                            CommunityId = reader["community_id"].ToString() ?? "",
+                            CommunityName = reader["community_name"].ToString() ?? "",
+                            CommunityDescription = reader["community_description"].ToString() ?? "",
+                            ImageLink = reader["community_link"].ToString() ?? "",
+                        };
+                        if (!Convert.IsDBNull(reader["community_pic"])) 
+                        {
+                            community.ImageData = (byte[])reader["community_pic"];
+                        }
+                        communities.Add(community);
                     }
-                    posts.Add(post);
-                    user.UserId = reader["user_id"].ToString();
-                    user.UserName = reader["user_name"].ToString();
-                    user.FirstName = reader["first_name"].ToString();
+                    if (reader["post_id"] != DBNull.Value)
+                    {
+                        Post post = new Post()
+                        {
+                            PostId = reader["post_id"].ToString() ?? "",
+                            PostContent = reader["post_content"].ToString() ?? "",
+                            // DateCreated = (DateTime)reader["date_created"],
+                            // PhotoId = reader["photo_id"].ToString(),
+                            ImageLink = reader["post_link"].ToString() ?? "",
+                        };
+                        if (!Convert.IsDBNull(reader["post_pic"])) 
+                        {
+                            post.ImageData = (byte[])reader["post_pic"];
+                        }
+                        posts.Add(post);
+                    }
+                    user.UserId = reader["user_id"].ToString() ?? "";
+                    user.UserName = reader["user_name"].ToString() ?? "";
+                    user.FirstName = reader["first_name"].ToString() ?? "";
                     // user.LastName = reader["last_name"].ToString();
-                    user.About = reader["about"].ToString();
-                    user.PhotoId = reader["photo_id"].ToString();
-                    user.ImageLink = reader["image_link"].ToString();
+                    user.About = reader["about"].ToString() ?? "";
+                    user.PhotoId = reader["photo_id"].ToString() ?? "";
+                    user.ImageLink = reader["image_link"].ToString() ?? "";
                     if (!Convert.IsDBNull(reader["image_data"])) 
                     {
                         user.ImageData = (byte[])reader["image_data"];
@@ -132,38 +151,44 @@ namespace interpolapi.Controllers
                 IList<Community> communities = new List<Community>();
                 while(reader.Read())
                 {
-                    Community community = new Community()
+                    if (reader["community_id"] != DBNull.Value)
                     {
-                        CommunityId = reader["community_id"].ToString(),
-                        CommunityName = reader["community_name"].ToString(),
-                        CommunityDescription = reader["community_description"].ToString(),
-                        ImageLink = reader["community_link"].ToString(),
-                    };
-                    if (!Convert.IsDBNull(reader["community_pic"])) 
-                    {
-                        community.ImageData = (byte[])reader["community_pic"];
+                        Community community = new Community()
+                        {
+                            CommunityId = reader["community_id"].ToString() ?? "",
+                            CommunityName = reader["community_name"].ToString() ?? "",
+                            CommunityDescription = reader["community_description"].ToString() ?? "",
+                            ImageLink = reader["community_link"].ToString() ?? "",
+                        };
+                        if (!Convert.IsDBNull(reader["community_pic"])) 
+                        {
+                            community.ImageData = (byte[])reader["community_pic"];
+                        }
+                        communities.Add(community);
                     }
-                    communities.Add(community);
-                    Post post = new Post()
+                    if (reader["post_id"] != DBNull.Value)
                     {
-                        PostId = reader["post_id"].ToString(),
-                        PostContent = reader["post_content"].ToString(),
-                        // DateCreated = (DateTime)reader["date_created"],
-                        // PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["post_link"].ToString(),
-                    };
-                    if (!Convert.IsDBNull(reader["post_pic"])) 
-                    {
-                        post.ImageData = (byte[])reader["post_pic"];
+                        Post post = new Post()
+                        {
+                            PostId = reader["post_id"].ToString() ?? "",
+                            PostContent = reader["post_content"].ToString() ?? "",
+                            // DateCreated = (DateTime)reader["date_created"],
+                            // PhotoId = reader["photo_id"].ToString(),
+                            ImageLink = reader["post_link"].ToString() ?? "",
+                        };
+                        if (!Convert.IsDBNull(reader["post_pic"])) 
+                        {
+                            post.ImageData = (byte[])reader["post_pic"];
+                        }
+                        posts.Add(post);
                     }
-                    posts.Add(post);
-                    user.UserId = reader["user_id"].ToString();
-                    user.UserName = reader["user_name"].ToString();
-                    user.FirstName = reader["first_name"].ToString();
+                    user.UserId = reader["user_id"].ToString() ?? "";
+                    user.UserName = reader["user_name"].ToString() ?? "";
+                    user.FirstName = reader["first_name"].ToString() ?? "";
                     // user.LastName = reader["last_name"].ToString();
-                    user.About = reader["about"].ToString();
-                    user.PhotoId = reader["photo_id"].ToString();
-                    user.ImageLink = reader["image_link"].ToString();
+                    user.About = reader["about"].ToString() ?? "";
+                    user.PhotoId = reader["photo_id"].ToString() ?? "";
+                    user.ImageLink = reader["image_link"].ToString() ?? "";
                     user.Posts = posts;
                     user.Communities = communities;
                     if (!Convert.IsDBNull(reader["image_data"])) 

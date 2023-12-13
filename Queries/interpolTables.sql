@@ -48,7 +48,7 @@ create table interpol.post (
 create table interpol.community (
     community_id uniqueidentifier PRIMARY KEY NOT NULL DEFAULT newid(),
     community_name NVARCHAR(50) NOT NULL,
-    community_description NVARCHAR(MAX) NOT NULL,
+    community_description NVARCHAR(MAX) NULL,
     date_created DATETIME NOT NULL,
     user_id uniqueidentifier NOT NULL,
     photo_id uniqueidentifier NULL,
