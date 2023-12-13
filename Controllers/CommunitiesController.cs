@@ -41,14 +41,14 @@ namespace interpolapi.Controllers
                 {
                     Community community = new Community()
                     {
-                        CommunityId = reader["community_id"].ToString(),
-                        CommunityName = reader["community_name"].ToString(),
-                        CommunityDescription = reader["community_description"].ToString(),
+                        CommunityId = reader["community_id"].ToString() ?? "",
+                        CommunityName = reader["community_name"].ToString() ?? "",
+                        CommunityDescription = reader["community_description"].ToString() ?? "",
                         // DateCreated = reader.GetDateTime(3),
                         User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), 
-                            UserId = reader["user_id"].ToString(), 
-                            ImageLink = reader["image_link"].ToString()
+                            UserName = reader["user_name"].ToString() ?? "", 
+                            UserId = reader["user_id"].ToString() ?? "", 
+                            ImageLink = reader["image_link"].ToString() ?? ""
                         }
                     };
                     if (!Convert.IsDBNull(reader["profile_pic"])) 
@@ -84,15 +84,15 @@ namespace interpolapi.Controllers
                 while(reader.Read())
                 {
                     {
-                        community.CommunityId = reader["community_id"].ToString();
-                        community.CommunityName = reader["community_name"].ToString();
-                        community.CommunityDescription = reader["community_description"].ToString();
+                        community.CommunityId = reader["community_id"].ToString() ?? "";
+                        community.CommunityName = reader["community_name"].ToString() ?? "";
+                        community.CommunityDescription = reader["community_description"].ToString() ?? "";
                         community.DateCreated = (DateTime)reader["date_created"];
-                        community.ImageLink = reader["community_link"].ToString();
+                        community.ImageLink = reader["community_link"].ToString() ?? "";
                         community.User = new InterpolUser() { 
-                            UserName = reader["user_name"].ToString(), 
-                            UserId = reader["user_id"].ToString(),
-                            ImageLink = reader["image_link"].ToString()
+                            UserName = reader["user_name"].ToString() ?? "", 
+                            UserId = reader["user_id"].ToString() ?? "",
+                            ImageLink = reader["image_link"].ToString() ?? ""
                         };
                     };
                     if (!Convert.IsDBNull(reader["profile_pic"])) 
