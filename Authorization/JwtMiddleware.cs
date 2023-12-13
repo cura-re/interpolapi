@@ -16,7 +16,7 @@ namespace interpolapi.Authorization
             var token = context.Request.Cookies["token"];
 
             //var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-            var userId = jwtUtils.ValidateToken(token);
+            var userId = jwtUtils.ValidateToken(token!);
             if (userId != null)
             {
                 // attach user to context on successful jwt validation
