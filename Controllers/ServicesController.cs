@@ -138,9 +138,13 @@ namespace interpolapi.Controllers
         [HttpGet("data")]
         public IActionResult GetUserInformation()
         {
-            var userId = HttpContext.Request.Cookies["user"];
+            if (HttpContext.Request.Cookies["user"] == null)
+            {
+                return Ok(new { message = "User not logged in" });
+            } 
+            string userId = HttpContext.Request.Cookies["user"] ?? "";
 
-            var user = _userService.GetById(userId);
+            InterpolUser user = _userService.GetById(userId);
 
             if (user != null) 
 

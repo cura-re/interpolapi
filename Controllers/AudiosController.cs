@@ -39,9 +39,9 @@ namespace interpolapi.Controllers
                 SqlDataReader reader = command.ExecuteReader();
                 while(reader.Read())
                 {
-                    var audio = new Audio()
+                    Audio audio = new Audio()
                     {
-                        AudioId = reader["audio_id"].ToString(),
+                        AudioId = reader["audio_id"].ToString() ?? "",
                         FileName = reader["file_name"].ToString(),
                     };
                     if (!Convert.IsDBNull(reader["audio_data"])) 
@@ -69,10 +69,10 @@ namespace interpolapi.Controllers
                 command.Parameters.AddWithValue("@AudioId", id);
                 command.Connection.Open();
                 SqlDataReader reader = command.ExecuteReader();
-                var audio = new Audio();
+                Audio audio = new Audio();
                 while(reader.Read())
                 {
-                    audio.AudioId = reader["audio_id"].ToString();
+                    audio.AudioId = reader["audio_id"].ToString()  ?? "";
                     audio.FileName = reader["file_name"].ToString();
                     if (!Convert.IsDBNull(reader["audio_data"])) 
                     {
@@ -131,17 +131,21 @@ namespace interpolapi.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            string userId = HttpContext.Request.Cookies["user"];
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            if (HttpContext.Request.Cookies["user"] != null)
             {
-                SqlCommand command = new SqlCommand("interpol.deleteAudio", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@AudioId", id);
-                command.Parameters.AddWithValue("@pUserId", userId);
-                command.Connection.Open();
-                command.ExecuteNonQuery();
-                return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
-            } 
+                string userId = HttpContext.Request.Cookies["user"] ?? "";
+                await using (SqlConnection connection = new SqlConnection(databaseConnection))
+                {
+                    SqlCommand command = new SqlCommand("interpol.deleteAudio", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@AudioId", id);
+                    command.Parameters.AddWithValue("@pUserId", userId);
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
+                } 
+            }
+            return NotFound();
         }
 
         private bool AudioExists(string id)

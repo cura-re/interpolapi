@@ -43,11 +43,11 @@ namespace interpolapi.Controllers
                 {
                     var action = new ActionTable()
                     {
-                        ActionId = reader["ActionId"].ToString(),
-                        ActionName = reader["ActionName"].ToString(),
-                        ActionDescription = reader["ActionDescription"].ToString(),
+                        ActionId = reader["ActionId"].ToString() ?? "",
+                        ActionName = reader["ActionName"].ToString() ?? "",
+                        ActionDescription = reader["ActionDescription"].ToString() ?? "",
                         DateCreated = Convert.ToDateTime(reader["DateCreated"]),
-                        PinId = Convert.ToString(reader["PinId"])
+                        PinId = Convert.ToString(reader["PinId"]) ?? ""
                     };
                     actionsList.Add(action);
                 }
@@ -71,11 +71,11 @@ namespace interpolapi.Controllers
                 var action = new ActionTable();
                 while(reader.Read())
                 {
-                    action.ActionId = reader["ActionId"].ToString();
-                    action.ActionName = reader["ActionName"].ToString();
+                    action.ActionId = reader["ActionId"].ToString() ?? "";
+                    action.ActionName = reader["ActionName"].ToString() ?? "";
                     action.ActionDescription = reader["ActionDescription"].ToString();
                     action.DateCreated = Convert.ToDateTime(reader["DateCreated"]);
-                    action.PinId = Convert.ToString(reader["PinId"]);
+                    action.PinId = Convert.ToString(reader["PinId"]) ?? "";
                 }
                 return action;
             } 

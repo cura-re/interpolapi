@@ -41,15 +41,15 @@ namespace interpolapi.Controllers
                 {
                     InterpolUser user = new InterpolUser()
                     {
-                        UserId = reader["user_id"].ToString(),
-                        UserName = reader["user_name"].ToString(),
-                        FirstName = reader["first_name"].ToString(),
+                        UserId = reader["user_id"].ToString()  ?? "",
+                        UserName = reader["user_name"].ToString() ?? "",
+                        FirstName = reader["first_name"].ToString() ?? "",
                         // DateOfBirth = Convert.ToDateTime(reader["date_of_birth"]),
                         // DateCreated = (DateTime)reader["date_created"],
                         // LastName = reader["last_name"].ToString(),
-                        About = reader["about"].ToString(),
-                        PhotoId = reader["photo_id"].ToString(),
-                        ImageLink = reader["image_link"].ToString()
+                        About = reader["about"].ToString() ?? "",
+                        PhotoId = reader["photo_id"].ToString() ?? "",
+                        ImageLink = reader["image_link"].ToString() ?? ""
                     };
                     if (!Convert.IsDBNull(reader["image_data"])) 
                     {
@@ -234,25 +234,29 @@ namespace interpolapi.Controllers
             {
                 return NotFound();
             }
-            string userId = HttpContext.Request.Cookies["user"];
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            if (HttpContext.Request.Cookies["user"] != null)
             {
-                SqlCommand command = new SqlCommand("interpol.updateUser", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pUseId", userId);
-                command.Parameters.AddWithValue("@pUserName", user.UserName);
-                command.Parameters.AddWithValue("@pFirstName", user.FirstName);
-                command.Parameters.AddWithValue("@pLastName", user.LastName);
-                command.Parameters.AddWithValue("@pDateOfBirth", user.DateOfBirth);
-                command.Parameters.AddWithValue("@pEmailAddress", user.EmailAddress);
-                // command.Parameters.AddWithValue("@pPassword", user.Password);
-                command.Parameters.AddWithValue("@pAbout", user.About);
-                command.Parameters.AddWithValue("@ImageLink", user.ImageLink);
-                command.Parameters.AddWithValue("@ImageData", user.ImageData);
-                command.Connection.Open();
-                command.ExecuteNonQuery();
-                return user;
-            } 
+                string userId = HttpContext.Request.Cookies["user"] ?? "";
+                await using (SqlConnection connection = new SqlConnection(databaseConnection))
+                {
+                    SqlCommand command = new SqlCommand("interpol.updateUser", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@pUseId", userId);
+                    command.Parameters.AddWithValue("@pUserName", user.UserName);
+                    command.Parameters.AddWithValue("@pFirstName", user.FirstName);
+                    command.Parameters.AddWithValue("@pLastName", user.LastName);
+                    command.Parameters.AddWithValue("@pDateOfBirth", user.DateOfBirth);
+                    command.Parameters.AddWithValue("@pEmailAddress", user.EmailAddress);
+                    // command.Parameters.AddWithValue("@pPassword", user.Password);
+                    command.Parameters.AddWithValue("@pAbout", user.About);
+                    command.Parameters.AddWithValue("@ImageLink", user.ImageLink);
+                    command.Parameters.AddWithValue("@ImageData", user.ImageData);
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    return user;
+                } 
+            }
+            return NotFound();
         }
 
         // POST: Users/Delete/5
@@ -265,17 +269,21 @@ namespace interpolapi.Controllers
                 return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
             }
 
-            string userId = HttpContext.Request.Cookies["user"];
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            if (HttpContext.Request.Cookies["user"] != null)
             {
-                SqlCommand command = new SqlCommand("interpol.deleteUser", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@pUserId", userId);
-                command.Parameters.AddWithValue("@pPassword", id);
-                command.Connection.Open();
-                command.ExecuteNonQuery();
-                return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
-            } 
+                string userId = HttpContext.Request.Cookies["user"] ?? "";
+                await using (SqlConnection connection = new SqlConnection(databaseConnection))
+                {
+                    SqlCommand command = new SqlCommand("interpol.deleteUser", connection);
+                    command.CommandType = System.Data.CommandType.StoredProcedure;
+                    command.Parameters.AddWithValue("@pUserId", userId);
+                    command.Parameters.AddWithValue("@pPassword", id);
+                    command.Connection.Open();
+                    command.ExecuteNonQuery();
+                    return Problem("Entity set 'InterpolContext.InterpolUsers'  is null.");
+                } 
+            }
+            return NotFound();
         }
 
         private bool InterpolUserExists(string id)
