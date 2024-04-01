@@ -7,23 +7,68 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using interpolapi.Data;
 using interpolapi.Models;
+using System.Data.SqlClient;
 
 namespace interpolapi.Controllers
 {
     public class CommentsController : Controller
     {
         private readonly InterpolContext _context;
+        private readonly IConfiguration _configuration;
+        private string? databaseConnection;
 
-        public CommentsController(InterpolContext context)
+        public CommentsController(InterpolContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
+            databaseConnection = _configuration.GetConnectionString("InterpolDb");
         }
 
         // GET: Comments
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<Comment>>> Index()
         {
-            var interpolContext = _context.Comments.Include(c => c.Photo).Include(c => c.Post);
-            return View(await interpolContext.ToListAsync());
+            if (_context.Posts == null)
+            {
+                return NotFound();
+            }
+            IList<Comment> commentsList = new List<Comment>(); 
+            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            {
+                SqlCommand command = new SqlCommand("interpol.getPosts", connection);
+                command.Connection.Open();
+                SqlDataReader reader = command.ExecuteReader();
+                while(reader.Read())
+                {
+                    Comment comment = new Comment()
+                    {
+                        CommentId = reader["comment_id"].ToString() ?? "",
+                        Content = reader["content"].ToString(),
+                        DateCreated = (DateTime)reader["date_created"],
+                        PostId = reader["post_id"].ToString(),
+                        PhotoId = reader["photo_id"].ToString(),
+                        Post = new Post() { 
+                                User = new InterpolUser() { 
+                                UserName = reader["user_name"].ToString() ?? "", 
+                                FirstName = reader["first_name"].ToString() ?? "", 
+                                UserId = reader["user_id"].ToString() ?? "", 
+                                ImageLink = reader["image_link"].ToString() ?? ""
+                            },
+                        UserId = reader["user_id"].ToString() ?? "", 
+                        ImageLink = reader["image_link"].ToString() ?? ""
+                        }
+                    };
+                    if (!Convert.IsDBNull(reader["profile_pic"])) 
+                    {
+                        comment.Post.User.ImageData = (byte[])reader["profile_pic"];
+                    }
+                    if (!Convert.IsDBNull(reader["comment_pic"])) 
+                    {
+                        comment.ImageData = (byte[])reader["comment_pic"];
+                    }
+                    commentsList.Add(comment);
+                }
+            } 
+            return commentsList.ToList();
         }
 
         // GET: Comments/Details/5
