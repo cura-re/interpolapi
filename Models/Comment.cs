@@ -14,6 +14,7 @@ public partial class Comment
     public string PostId { get; set; } = null!;
 
     public string? PhotoId { get; set; }
+    public byte[]? ImageData { get; set; }
 
     public virtual Photo? Photo { get; set; }
 
