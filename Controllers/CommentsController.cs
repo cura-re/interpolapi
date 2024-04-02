@@ -42,9 +42,9 @@ namespace interpolapi.Controllers
                     Comment comment = new Comment()
                     {
                         CommentId = reader["comment_id"].ToString() ?? "",
-                        Content = reader["content"].ToString(),
+                        Content = reader["content"].ToString() ?? "",
                         DateCreated = (DateTime)reader["date_created"],
-                        PostId = reader["post_id"].ToString(),
+                        PostId = reader["post_id"].ToString() ?? "",
                         PhotoId = reader["photo_id"].ToString(),
                         Post = new Post() { 
                                 User = new InterpolUser() { 
