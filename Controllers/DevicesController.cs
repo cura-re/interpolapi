@@ -30,43 +30,35 @@ namespace interpolapi.Controllers
             Devicer devicer = new Devicer("1", "Arduino", "Microcontroller", "Uno", "Arduino", "123456", "Interpol", "Interpol", "On", "Good", new Dictionary<string, string>(), new Dictionary<string, string>(), new Dictionary<string, string>());
             devicer.TurnOn(command);
         }
+        public void TurnOffDevice(string command)
+        {
+            Devicer devicer = new Devicer("1", "Arduino", "Microcontroller", "Uno", "Arduino", "123456", "Interpol", "Interpol", "On", "Good", new Dictionary<string, string>(), new Dictionary<string, string>(), new Dictionary<string, string>());
+            devicer.TurnOff(command);
+        }
 
         // GET: Users
-        public async Task<ActionResult<IEnumerable<InterpolUser>>> TurnOn(string select)
+        public async Task<ActionResult<string>> TurnOn(string command)
         {
-            TurnOnDevice(select);
+            TurnOnDevice(command);
             if (_context.Devices == null)
             {
-                return NotFound();
+                Console.WriteLine("Entity set 'InterpolContext.Devices'  is null.");
             }
-            IList<InterpolUser> usersList = new List<InterpolUser>(); 
-            await using (SqlConnection connection = new SqlConnection(databaseConnection))
+            return "Device turned on";
+        }
+
+        public async Task<ActionResult<string>> TurnOff(string command)
+        {
+            TurnOffDevice(command);
+            if (_context.Devices == null)
             {
-                SqlCommand command = new SqlCommand("interpol.getUsers", connection);
-                command.Connection.Open();
-                SqlDataReader reader = command.ExecuteReader();
-                while(reader.Read())
-                {
-                    InterpolUser user = new InterpolUser()
-                    {
-                        UserId = reader["user_id"].ToString()  ?? "",
-                        UserName = reader["user_name"].ToString() ?? "",
-                        FirstName = reader["first_name"].ToString() ?? "",
-                        // DateOfBirth = Convert.ToDateTime(reader["date_of_birth"]),
-                        // DateCreated = (DateTime)reader["date_created"],
-                        // LastName = reader["last_name"].ToString(),
-                        About = reader["about"].ToString() ?? "",
-                        PhotoId = reader["photo_id"].ToString() ?? "",
-                        ImageLink = reader["image_link"].ToString() ?? ""
-                    };
-                    if (!Convert.IsDBNull(reader["image_data"])) 
-                    {
-                        user.ImageData = (byte[])reader["image_data"];
-                    }
-                    usersList.Add(user);
-                }
-            } 
-            return usersList.ToList();
+                Console.WriteLine("Entity set 'InterpolContext.Devices'  is null.");
+            }
+            Device device = new Device();
+            device.IsActive = true;
+            _context.Devices.Add(device);
+            await _context.SaveChangesAsync();
+            return "Device turned off";
         }
 
         // GET: Users/Username/username
