@@ -13,6 +13,7 @@ public partial class Device
 
     public DateTime DateCreated { get; set; }
 
+    public bool IsActive { get; set; } = false;
     public string UserId { get; set; } = null!;
 
     public virtual ICollection<Pin> Pins { get; set; } = new List<Pin>();

@@ -44,11 +44,36 @@ public class Devicer {
             Console.WriteLine(e.Message);
         }
     }
-    public void TurnOn(string command)
+    public string TurnOn(string command)
     {
-        Console.Write("Turning on device: " + DeviceName + " with command: " + command + "\n" + serialPort);
+        if (serialPort.IsOpen) {
+            Console.Write("Turning on device: " + DeviceName + " with command: " + command + "\n" + serialPort);
+            serialPort.WriteLine(command);
+            _lastUpdatedAt = DateTimeOffset.Now;
+            // Dispose();
+            return "Device is on";
+        }
+        serialPort.Open();
         serialPort.WriteLine(command);
         _lastUpdatedAt = DateTimeOffset.Now;
+        // Dispose();
+        return "Device opened and turned on.";
+    }
+
+    public string TurnOff(string command)
+    {
+        if (serialPort.IsOpen) {
+            Console.Write("Turning off device: " + DeviceName + " with command: " + command + "\n" + serialPort);
+            serialPort.WriteLine(command);
+            _lastUpdatedAt = DateTimeOffset.Now;
+            // Dispose();
+            return "Device is off";
+        }
+        serialPort.Open();
+        serialPort.WriteLine(command);
+        _lastUpdatedAt = DateTimeOffset.Now;
+        // Dispose();
+        return "Device opened and turned off.";
     }
     public void Dispose()
     {
